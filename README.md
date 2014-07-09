@@ -24,6 +24,7 @@ Half-Life 2 Campaign 1.26 was an addon for an old Garry's Mod which doesn't work
 * The gamemode doesn't predict the amount of Health/Armor/Ammo from the last level very good. 
 * Only 1 player can be the !player actor. 
 * d1_trainstation_01 : The G-Man scene doesn't play correctly due to point_viewcontrol entities not working correctly. It is recommended to stay in the spot you spawned on. 
+* d1_trainstation_04 : The Gordon K.O scene doesn't play in Multiplayer. This is a point_viewcontrol problem.
 * d1_trainstation_05 : The part where you fall in the water and the Ichthyosaur attacks requires you to be where the Ichthyosaur aims at to teleport successfully. If you are out of the area it is aiming at, you won't be teleported and you won't be able to continue. 
 * d3_citadel : Possible crash on changelevel while in pods(?) 
 * d3_breen_01 : The scene after Breen uses the super gravity gun doesn't play. I added a changelevel at the elevator door to get past this issue. 
