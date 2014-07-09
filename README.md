@@ -35,6 +35,7 @@ Half-Life 2 Campaign 1.26 was an addon for an old Garry's Mod which doesn't work
 
 * d1_trainstation_06 gives you a Medkit. 
 * Once you die, you cannot respawn until the next map. 
+* If all players die, the map restarts.
 * F1 for help menu. 
 * You can spawn vehicles with F3(If allowed). 
 
