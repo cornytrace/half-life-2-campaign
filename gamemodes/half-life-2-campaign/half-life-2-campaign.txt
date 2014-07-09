@@ -1,0 +1,19 @@
+"Gamemode"
+{
+	"base"		"base"
+	"title"		"Half-Life 2 Campaign 1.26"
+	"version"	"1.26.GM13"  
+
+	"author_name" 	"AMT"
+	"author_email" 	"theis.andrew@gmail.com"
+	"author_url"	"http://www.andrewtheis.com"
+	
+  "description"	"Play Half-Life 2 in cooperative mode online or on Single-Player."
+	"selectable"	"1"
+	
+	"menusystem"	"1"
+
+	"settings"
+	{
+	}
+}
