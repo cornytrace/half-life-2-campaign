@@ -1,8 +1,16 @@
-Half-Life 2 Campaign 1.26 was an addon for an old Garry's Mod which doesn't work in Garry's Mod 13. I decided to try port this gamemode for Garry's Mod 13 to see the outcome and I must say, I'm quite happy with it. 
+==========
+GitHub Download
+==========
 
-I know this gamemode has been ported by other people but they haven't released it in Workshop yet. 
+People can download the gamemode and can freely edit it to make it work better, etc.
+Remember to give credits!
 
-- Information 
+===
+
+
+Half-Life 2 Campaign 1.26 was an addon for an old Garry's Mod which doesn't work in Garry's Mod 13. I decided to try port this gamemode for Garry's Mod 13 to see the outcome and I must say, I'm quite happy with it.
+
+-- Information 
 
 * I aimed the gamemode to be close to the original 1.26 version. 
 * Can be played in Multiplayer or Singleplayer. 
@@ -10,7 +18,7 @@ I know this gamemode has been ported by other people but they haven't released i
 * Collisions disabled for players and friendly npcs. 
 * The Super Gravity Gun parts add damage to the Gravity Gun but doesn't change visual effects and you can't pick up Combine soldiers(Punting Combine kills them instantly). 
 
-- Knowns Issues(Issues I've seen so far) 
+-- Knowns Issues(Issues I've seen so far) 
 
 * EP1/EP2 cannot be played due to animations and scenes being missing. 
 * The gamemode doesn't predict the amount of Health/Armor/Ammo from the last level very good. 
@@ -22,22 +30,19 @@ I know this gamemode has been ported by other people but they haven't released i
 
 ** If there is anymore bugs on any HL2 map, comment about it. 
 
-- Some tips 
+-- Some tips 
 
 * d1_trainstation_06 gives you a Medkit. 
 * Once you die, you cannot respawn until the next map. 
 * F1 for help menu. 
 * You can spawn vehicles with F3(If allowed). 
 
-- Credits 
+-- Credits 
 
 * AMT(Original creator of the gamemode). 
 
 ** Please give all credits to AMT since he was the one who originally made this gamemode, I just simply ported it. 
 
-
-P.S. I'm not a good LUA coder at all, I just wanted to port this gamemode so people can atleast enjoy some Half-Life 2 in Garry's Mod. 
-P.S.S. This is my first Workshop upload. If there are any problems you encounter here, just comment about it and I will try resolve it. 
 
 Extra tip: I won't be fixing bugs in the base of the gamemode(I'm leaving it for other people). Though, I can try fix a level with the map edit .lua files in the gamemode if a bug is present.
 
