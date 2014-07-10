@@ -70,6 +70,16 @@ function GM:CreateTDML(min, max)
 	tdml:Spawn()
 end
 
+// Creates a brush playercollide
+function GM:CreateTC(min, max)
+	tcPos = max - ((max - min) / 2)
+	
+	local tc = ents.Create("brush_playercollide")
+	tc:SetPos(tcPos)
+	tc.min = min
+	tc.max = max
+	tc:Spawn()
+end
 
 // Called when the player dies
 function GM:DoPlayerDeath(pl, attacker, dmgInfo)
@@ -248,6 +258,20 @@ function GM:InitPostEntity()
 			tcp:Spawn()
 			
 			table.insert(checkpointPositions, tcp.pos)
+		end
+	end
+	
+	// Setup BRUSH_PLAYERCOLLIDE
+	if BRUSH_PLAYERCOLLIDE then
+		for _, tcInfo in pairs(BRUSH_PLAYERCOLLIDE) do
+			local tc = ents.Create("brush_playercollide")
+			
+			tc.min = tcInfo[1]
+			tc.max = tcInfo[2]
+			tc.pos = tc.max - ((tc.max - tc.min) / 2)
+			
+			tc:SetPos(tc.pos)
+			tc:Spawn()
 		end
 	end
 	

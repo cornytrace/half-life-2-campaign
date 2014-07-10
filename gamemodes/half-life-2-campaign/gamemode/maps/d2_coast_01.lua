@@ -2,6 +2,10 @@ ALLOWED_VEHICLE = "Jeep"
 
 NEXT_MAP = "d2_coast_03"
 
+BRUSH_PLAYERCOLLIDE = {
+	{Vector(-8201, 258, 976), Vector(-8663, 763, 1022)}
+}
+
 hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
 	pl:Give("weapon_crowbar")
 	pl:Give("weapon_pistol")

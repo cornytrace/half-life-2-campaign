@@ -1,5 +1,7 @@
 ALLOWED_VEHICLE = "Jeep"
 
+INFO_PLAYER_SPAWN = {Vector(-14200, 12494, 562), 0}
+
 NEXT_MAP = "d2_coast_10"
 
 if file.Exists("hl2c_d2_coast_08.txt") then
