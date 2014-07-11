@@ -17,3 +17,8 @@ hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
 	pl:Give("weapon_rpg")
 	pl:Give("weapon_crossbow")
 end)
+
+hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
+	local spawner = ents.FindByName("citizen_spawner_3")
+	spawner[1]:Fire("addoutput", "spawnflags 48", "0")
+end)

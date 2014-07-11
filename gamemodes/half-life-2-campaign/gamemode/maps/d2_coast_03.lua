@@ -3,13 +3,13 @@ ALLOWED_VEHICLE = "Jeep"
 NEXT_MAP = "d2_coast_04"
 
 hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
-	local filter = ents.FindByName("jeep_filter")
-	filter[1]:Remove()
-
 	local wep = ents.Create("weapon_rpg")
 	wep:SetPos(Vector(8513, 4299, 270))
 	wep:Spawn()
 	wep:Activate()
+
+	local filter = ents.FindByName("jeep_filter")
+	filter[1]:Remove()
 end)
 
 hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)

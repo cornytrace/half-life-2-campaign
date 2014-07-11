@@ -180,9 +180,23 @@ function GM:Initialize()
 		Model = "models/buggy.mdl",
 		KeyValues = {	
 			vehiclescript =	"scripts/vehicles/jeep_test.txt",
+			EnableGun = 1
 		}
 	}
 	list.Set("Vehicles", "Jeep", jeep)
+	
+	// Named Jeep
+	local namedjeep = {
+		Name = "Named Jeep",
+		Class = "prop_vehicle_jeep_old",
+		Model = "models/buggy.mdl",
+		KeyValues = {	
+			vehiclescript =	"scripts/vehicles/jeep_test.txt",
+			targetname = "jeep",
+			EnableGun = 1
+		}
+	}
+	list.Set("Vehicles", "Named Jeep", namedjeep)
 	
 	// Airboat
 	local airboat = {
