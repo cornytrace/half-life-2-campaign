@@ -15,7 +15,22 @@ function ENT:Initialize()
 	self:DrawShadow(false)
 	self:SetCollisionBounds(min, max)
 	self:SetSolid(SOLID_BBOX)
-	self:SetCollisionGroup(COLLISION_GROUP_NONE)
+	self:SetCollisionGroup(COLLISION_GROUP_WORLD)
 	self:SetMoveType(0)
-	self:SetTrigger(false)
+	self:SetTrigger(true)
+end
+
+
+// Called when an entity touches it
+function ENT:StartTouch(ent)
+	if ent:IsValid() && ent:IsPlayer() && ent:Team() == TEAM_ALIVE then
+		ent:Freeze(true)
+	end
+end
+
+// Called when an entity leaves it
+function ENT:EndTouch(ent)
+	if ent:IsValid() && ent:IsPlayer() && ent:Team() == TEAM_ALIVE then
+		ent:Freeze(false)
+	end
 end

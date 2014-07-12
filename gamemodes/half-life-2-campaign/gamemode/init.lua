@@ -70,15 +70,15 @@ function GM:CreateTDML(min, max)
 	tdml:Spawn()
 end
 
-// Creates a brush playercollide
-function GM:CreateTC(min, max)
-	tcPos = max - ((max - min) / 2)
+// Creates a brush playerfreeze
+function GM:CreatePF(min, max)
+	pfPos = max - ((max - min) / 2)
 	
-	local tc = ents.Create("brush_playercollide")
-	tc:SetPos(tcPos)
-	tc.min = min
-	tc.max = max
-	tc:Spawn()
+	local pf = ents.Create("brush_playerfreeze")
+	pf:SetPos(tcPos)
+	pf.min = min
+	pf.max = max
+	pf:Spawn()
 end
 
 // Called when the player dies
@@ -275,17 +275,17 @@ function GM:InitPostEntity()
 		end
 	end
 	
-	// Setup BRUSH_PLAYERCOLLIDE
-	if BRUSH_PLAYERCOLLIDE then
-		for _, tcInfo in pairs(BRUSH_PLAYERCOLLIDE) do
-			local tc = ents.Create("brush_playercollide")
+	// Setup BRUSH_PLAYERFREEZE
+	if BRUSH_PLAYERFREEZE then
+		for _, pfInfo in pairs(BRUSH_PLAYERFREEZE) do
+			local pf = ents.Create("brush_playerfreeze")
 			
-			tc.min = tcInfo[1]
-			tc.max = tcInfo[2]
-			tc.pos = tc.max - ((tc.max - tc.min) / 2)
+			pf.min = pfInfo[1]
+			pf.max = pfInfo[2]
+			pf.pos = pf.max - ((pf.max - pf.min) / 2)
 			
-			tc:SetPos(tc.pos)
-			tc:Spawn()
+			pf:SetPos(pf.pos)
+			pf:Spawn()
 		end
 	end
 	
@@ -400,7 +400,7 @@ function GM:PlayerDisconnected(pl)
 	
 	pl:RemoveVehicle()
 	
-	if game.isDedicated() && #player.GetAll() == 1 then
+	if game.IsDedicated(true) && #player.GetAll() == 1 then
 		game.ConsoleCommand("changelevel "..game.GetMap().."\n")
 	end
 end
@@ -504,11 +504,10 @@ end
 function GM:PlayerSpawn(pl)
 
 	player_manager.SetPlayerClass( pl, "player_coop" )
-	pl:SetPlayerColor( Vector( 1,0.5,0 ) )
 
 	if pl:Team() == TEAM_DEAD then
 		pl:Spectate(OBS_MODE_ROAMING)
-		--pl:SetPos(pl.deathPos)
+		pl:SetPos(pl.deathPos)
 		pl:SetNoTarget(true)
 		return
 	end
@@ -730,6 +729,17 @@ end
 function GM:Think()
 	if #player.GetAll() > 0 && #team.GetPlayers(TEAM_ALIVE) + #team.GetPlayers(TEAM_COMPLETED_MAP) <= 0 then
 		GAMEMODE:RestartMap()
+	end
+	
+	// Is player a citizen?
+	for _, pl in pairs(player.GetAll()) do
+		if pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN == false then	
+			pl:SetPlayerColor( Vector( 1,0.5,0 ) )
+		elseif pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN == true then
+			pl:SetPlayerColor( Vector( 0,0.5,1 ) )
+		elseif PLAYER_IS_CITIZEN != true || PLAYER_IS_CITIZEN != false then
+			pl:ChatPrint("WARNING!!! PLAYER_IS_CITIZEN is not defined!")
+		end
 	end
 	
 	// For each player

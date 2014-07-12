@@ -29,11 +29,6 @@ function ENT:StartTouch(ent)
 		// Force the player to exit the vehicle!
 		ent:ExitVehicle()
 		
-		// Remove their vehicle
-		if ent:GetVehicle() && ent:GetVehicle():IsValid() then
-			ent:GetVehicle():Remove()
-		end
-		
 		// Freeze them and make sure they don't push people away
 		ent:Lock()
 		ent:SetMoveType(0)

@@ -38,7 +38,7 @@ NPC_POINT_VALUES = {
 
 
 // Play Episode 1 after HL2 [0 = No, 1 = Yes] (Default: 0)
-PLAY_EPISODE_1 = 1
+-- PLAY_EPISODE_1 = 0 BROKEN IN GMOD 13
 
 
 // Play Episode 2 after Episode 1 [0 = No, 1 = Yes] (Default: 0)
@@ -48,7 +48,6 @@ PLAY_EPISODE_1 = 1
 // Seconds before the map is restarted (Default: 10)
 RESTART_MAP_TIME = 10
 
-
 // Models the player can be
 PLAYER_MODELS = {
 	"models/player/group01/female_01.mdl",
@@ -56,7 +55,6 @@ PLAYER_MODELS = {
 	"models/player/group01/female_03.mdl",
 	"models/player/group01/female_04.mdl",
 	"models/player/group01/female_06.mdl",
-//	"models/player/group01/female_07.mdl",
 	"models/player/group01/male_01.mdl",
 	"models/player/group01/male_02.mdl",
 	"models/player/group01/male_03.mdl",
@@ -71,7 +69,6 @@ PLAYER_MODELS = {
 	"models/player/group03/female_03.mdl",
 	"models/player/group03/female_04.mdl",
 	"models/player/group03/female_06.mdl",
-//	"models/player/group03/female_07.mdl",
 	"models/player/group03/male_01.mdl",
 	"models/player/group03/male_02.mdl",
 	"models/player/group03/male_03.mdl",
@@ -83,7 +80,6 @@ PLAYER_MODELS = {
 	"models/player/group03/male_09.mdl"
 }
 
-
 // If everyone beats the level, one of these will be played
 // Leave blank to disable
 SUCCESS_SOUNDS = {}
@@ -91,3 +87,6 @@ SUCCESS_SOUNDS = {}
 
 // Number of seconds before a player is vulnerable after they spawn (Default: 10)
 VULNERABLE_TIME = 0
+
+// Is player a citizen? Used for start of HL2 only!
+PLAYER_IS_CITIZEN = false
