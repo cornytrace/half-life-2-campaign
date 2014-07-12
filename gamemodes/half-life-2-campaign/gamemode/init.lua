@@ -507,10 +507,9 @@ function GM:PlayerSpawn(pl)
 	pl:SetPlayerColor( Vector( 1,0.5,0 ) )
 
 	if pl:Team() == TEAM_DEAD then
-		pl:Spectate(OBS_MODE_CHASE)
-		pl:SetPos(pl.deathPos)
+		pl:Spectate(OBS_MODE_ROAMING)
+		--pl:SetPos(pl.deathPos)
 		pl:SetNoTarget(true)
-		
 		return
 	end
 	

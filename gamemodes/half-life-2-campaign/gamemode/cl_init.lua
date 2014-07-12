@@ -161,6 +161,10 @@ function GM:Initialize()
 	showNav = true
 	scoreboard = nil
 	
+	// Create client ConVars to toggle glows
+	CreateClientConVar( "hl2c_cl_player_glows", "0", true, false )
+	CreateClientConVar( "hl2c_cl_citizen_glows", "0", true, false )
+	
 	// Fonts we will need later
 	surface.CreateFont("arial16", {
 		font = "Arial",
@@ -325,6 +329,50 @@ function GM:ScoreboardShow()
 	scoreboard:UpdateScoreboard(true)
 end
 
+// Player glows and citizen glows WIP
+function GM:PreDrawHalos()
+	if GetConVarNumber("hl2c_cl_player_glows") == 1 || GetConVarNumber("hl2c_cl_player_glows") >= 1 then
+		hook.Add( "PreDrawHalos", "AddHalos", function()
+			local ent = ents.FindByClass("player")
+			local tab = {}
+			table.insert( tab, ent )
+			halo.Add( ent, Color( 255, 126.5, 0 ), 5, 5, 2, true, true )
+		end )
+	elseif GetConVarNumber("hl2c_cl_player_glows") == 0 then
+		hook.Add( "PreDrawHalos", "AddHalos", function()
+			local ent = ents.FindByClass("none")
+			local tab = {}
+			table.insert( tab, ent )
+			halo.Add( ent, Color( 0, 0, 0 ), 0, 0, 0, false, false )
+		end )
+	end
+
+	if GetConVarNumber("hl2c_cl_citizen_glows") == 1 || GetConVarNumber("hl2c_cl_citizen_glows") >= 1 then
+		local client = LocalPlayer()
+		local tr = client:GetEyeTrace().Entity:GetPos():Distance(client:GetPos()) < 1200
+
+		if LocalPlayer():GetEyeTrace().Entity:GetClass() == "npc_citizen" then
+			local ent = LocalPlayer():GetEyeTrace().Entity
+			local tab = {}
+			table.insert( tab, ent )
+			if tr then
+				halo.Add(tab, Color(0, 0, 255), 5, 5, 2, true, false)
+			end
+		end
+	elseif GetConVarNumber("hl2c_cl_citizen_glows") == 0 then
+		local client = LocalPlayer()
+		local tr = client:GetEyeTrace().Entity:GetPos():Distance(client:GetPos()) < 0
+
+		if LocalPlayer():GetEyeTrace().Entity:GetClass() == "none" then
+			local ent = LocalPlayer():GetEyeTrace().Entity
+			local tab = {}
+			table.insert( tab, ent )
+			if tr then
+				halo.Add(tab, Color(0, 0, 0), 0, 0, 0, false, false)
+			end
+		end
+	end
+end
 
 // Called by ShowTeam
 function ShowTeam()

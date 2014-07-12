@@ -20,5 +20,8 @@ end)
 
 hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
 	local spawner = ents.FindByName("citizen_spawner_3")
-	spawner[1]:Fire("addoutput", "spawnflags 48", "0")
+	spawner[1]:Remove()
+
+	local exit = ents.FindByName("logic_start_leader_exit")
+	exit[1]:Fire("addoutput", "OnTrigger lighthouse_secret_door,Open,5.00,1")
 end)
