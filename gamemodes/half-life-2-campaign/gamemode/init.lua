@@ -737,7 +737,7 @@ function GM:Think()
 			pl:SetPlayerColor( Vector( 1,0.5,0 ) )
 		elseif pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN == true then
 			pl:SetPlayerColor( Vector( 0,0.5,1 ) )
-		elseif PLAYER_IS_CITIZEN != true || PLAYER_IS_CITIZEN != false then
+		elseif PLAYER_IS_CITIZEN != false && PLAYER_IS_CITIZEN != true then
 			pl:ChatPrint("WARNING!!! PLAYER_IS_CITIZEN is not defined!")
 		end
 	end
