@@ -20,8 +20,3 @@ hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
 	pl:Give("weapon_ar2")
 	pl:Give("weapon_rpg")
 end)
-
-hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
-	local fall = ents.FindByName("fall_trigger")
-	fall[1]:Remove()
-end)

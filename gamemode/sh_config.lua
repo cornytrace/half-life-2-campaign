@@ -36,15 +36,6 @@ NPC_POINT_VALUES = {
 	["npc_strider"] = 3
 }
 
-
-// Play Episode 1 after HL2 [0 = No, 1 = Yes] (Default: 0)
--- PLAY_EPISODE_1 = 0 BROKEN IN GMOD 13
-
-
-// Play Episode 2 after Episode 1 [0 = No, 1 = Yes] (Default: 0)
--- PLAY_EPISODE_2 = 0 BROKEN IN GMOD 13
-
-
 // Seconds before the map is restarted (Default: 10)
 RESTART_MAP_TIME = 10
 

@@ -2,10 +2,13 @@ NEXT_MAP = "d1_trainstation_06"
 
 PLAYER_IS_CITIZEN = true
 
+BRUSH_PLAYERCLIP = {
+	{Vector(-7600, 4379, 10822), Vector(-6750, 5055, 10928)}
+}
+
 BRUSH_PLAYERFREEZE = {
 	{Vector(3653, -4537, 9830), Vector(3520, -4438, 9984)},
-	{Vector(-13418, -178, 32), Vector(-13376, -136, 128)},
-	{Vector(-7600, 4379, 10822), Vector(-6750, 5055, 10928)}
+	{Vector(-13418, -178, 32), Vector(-13376, -136, 128)}
 }
 
 TRIGGER_CHECKPOINT = {

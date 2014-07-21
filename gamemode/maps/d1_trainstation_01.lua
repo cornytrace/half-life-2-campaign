@@ -1,3 +1,5 @@
+INFO_PLAYER_SPAWN = {Vector(-14576, -14208, -1264), 90}
+
 NEXT_MAP = "d1_trainstation_02"
 
 RESET_PL_INFO = true

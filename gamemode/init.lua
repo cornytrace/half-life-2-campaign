@@ -29,6 +29,15 @@ if !ConVarExists("hl2c_admin_physgun") then
 	CreateConVar("hl2c_admin_noclip", ADMIN_PHYSGUN, FCVAR_NOTIFY)
 end
 
+// Let's see if we can turn the playermodel restrictions off
+if !ConVarExists("hl2c_playermodel_restrictions") then
+	CreateConVar("hl2c_playermodel_restrictions", "1", { FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Sets whether you want to use custom playermodels.")
+end
+
+// Do we want HEV hands?
+if !ConVarExists("hl2c_hev_hands") then
+	CreateConVar("hl2c_hev_hands", "1", { FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Choose between HEV hands or normal hands.")
+end
 
 // Precache all the player models ahead of time
 for _, playerModel in pairs(PLAYER_MODELS) do
@@ -75,10 +84,22 @@ function GM:CreatePF(min, max)
 	pfPos = max - ((max - min) / 2)
 	
 	local pf = ents.Create("brush_playerfreeze")
-	pf:SetPos(tcPos)
+	pf:SetPos(pfPos)
 	pf.min = min
 	pf.max = max
 	pf:Spawn()
+end
+
+// Creates a brush playerclip
+// BROUGHT BACK FROM THE DEAD
+function GM:CreatePC(min, max)
+	pcPos = max - ((max - min) / 2)
+	
+	local pc = ents.Create("brush_playerclip")
+	pc:SetPos(pcPos)
+	pc.min = min
+	pc.max = max
+	pc:Spawn()
 end
 
 // Called when the player dies
@@ -289,6 +310,21 @@ function GM:InitPostEntity()
 		end
 	end
 	
+	// Setup BRUSH_PLAYERCLIP
+	// RECREATED DUE TO BUGS WITH BRUSH_PLAYERFREEZE NOT WORKING AT TIMES
+	if BRUSH_PLAYERCLIP then
+		for _, pcInfo in pairs(BRUSH_PLAYERCLIP) do
+			local pc = ents.Create("brush_playerclip")
+			
+			pc.min = pcInfo[1]
+			pc.max = pcInfo[2]
+			pc.pos = pc.max - ((pc.max - pc.min) / 2)
+			
+			pc:SetPos(pc.pos)
+			pc:Spawn()
+		end
+	end
+	
 	// Setup TRIGGER_DELAYMAPLOAD
 	if TRIGGER_DELAYMAPLOAD then
 		GAMEMODE:CreateTDML(TRIGGER_DELAYMAPLOAD[1], TRIGGER_DELAYMAPLOAD[2])
@@ -311,12 +347,10 @@ function GM:InitPostEntity()
 	umsg.Vector(checkpointPositions[#checkpointPositions])
 	umsg.End()
 	
-	// Remove all triggers that cause the game to "end"
-	local triggerMultiples = ents.FindByClass("trigger_multiple")
+	// Remove fall_trigger triggers which cause the game to "end"
+	local triggerMultiples = ents.FindByName("fall_trigger")
 	for _, tm in pairs(triggerMultiples) do
-		if tm:GetName() == "fall_trigger" then
-			tm:Remove()
-		end
+		tm:Remove()
 	end
 end 
 
@@ -488,10 +522,16 @@ function GM:PlayerSetModel(pl)
 	else
 		local modelName = player_manager.TranslatePlayerModel(pl:GetInfo("cl_playermodel"))
 		
-		if modelName && table.HasValue(PLAYER_MODELS, string.lower(modelName)) then
-			pl.modelName = modelName
-		else
-			pl.modelName = PLAYER_MODELS[math.random(1, #PLAYER_MODELS)]
+		if GetConVarNumber("hl2c_playermodel_restrictions") == 1 then
+			if modelName && table.HasValue(PLAYER_MODELS, string.lower(modelName)) then
+				pl.modelName = modelName
+			else
+				pl.modelName = PLAYER_MODELS[math.random(1, #PLAYER_MODELS)]
+			end
+		elseif GetConVarNumber("hl2c_playermodel_restrictions") != 1 then
+			if modelName then
+				pl.modelName = modelName
+			end
 		end
 	end
 	
@@ -559,21 +599,38 @@ function GM:PlayerSpawn(pl)
 		pl:KillSilent()
 	end
 
-	pl:SetupHands()
+	if GetConVarNumber("hl2c_hev_hands") == 1 then
+		pl:SetupHands()
+	elseif GetConVarNumber("hl2c_hev_hands") != 1 then
+			local oldhands = pl:GetHands()
+	if ( IsValid( oldhands ) ) then oldhands:Remove() end
+
+	local hands = ents.Create( "gmod_hands" )
+	if ( IsValid( hands ) ) then
+		pl:SetHands( hands )
+		hands:SetOwner( pl )
+
+		-- Which hands should we use?
+		local cl_playermodel = pl:GetInfo( "cl_playermodel" )
+		local info = player_manager.TranslatePlayerHands( cl_playermodel )
+		if ( info ) then
+			hands:SetModel( info.model )
+			hands:SetSkin( info.skin )
+			hands:SetBodyGroups( info.body )
+		end
+
+		-- Attach them to the viewmodel
+		local vm = pl:GetViewModel( 0 )
+		hands:AttachToViewmodel( vm )
+
+		vm:DeleteOnRemove( hands )
+		pl:DeleteOnRemove( hands )
+
+		hands:Spawn()
+ 	end
+	end
 	
 end
-
--- function GM:PlayerSetHandsModel( pl, ent )
-
-	-- local simplemodel = player_manager.TranslateToPlayerModelName( pl:GetModel() )
-	-- local info = player_manager.TranslatePlayerHands( simplemodel )
-	-- if ( info ) then
-		-- ent:SetModel( info.model )
-		-- ent:SetSkin( info.skin )
-		-- ent:SetBodyGroups( info.body )
-	-- end
-
--- end
 
 // Called when a player uses their flashlight
 function GM:PlayerSwitchFlashlight(pl, on)

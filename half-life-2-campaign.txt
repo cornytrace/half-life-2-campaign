@@ -1,7 +1,7 @@
 "Gamemode"
 {
 	"base"		"base"
-	"title"		"Half-Life 2 Campaign 1.26"
+	"title"		"Half-Life 2 Campaign"
 	"version"	"1.26.GM13"  
 
 	"author_name" 	"AMT"

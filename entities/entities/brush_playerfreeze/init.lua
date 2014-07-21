@@ -25,6 +25,7 @@ end
 function ENT:StartTouch(ent)
 	if ent:IsValid() && ent:IsPlayer() && ent:Team() == TEAM_ALIVE then
 		ent:Freeze(true)
+		ent:SetRenderMode(RENDERMODE_NONE)
 	end
 end
 
@@ -32,5 +33,6 @@ end
 function ENT:EndTouch(ent)
 	if ent:IsValid() && ent:IsPlayer() && ent:Team() == TEAM_ALIVE then
 		ent:Freeze(false)
+		ent:SetRenderMode(RENDERMODE_NORMAL)
 	end
 end

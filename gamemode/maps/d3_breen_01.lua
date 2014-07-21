@@ -1,5 +1,7 @@
 INFO_PLAYER_SPAWN = {Vector(-2489, -1292, 580), 90}
 
+NEXT_MAP = "d1_trainstation_01"
+
 NEXT_MAP_PERCENT = 100
 
 RESET_WEAPONS = true
@@ -21,9 +23,3 @@ hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
 	local blackout_viewcontroller = ents.FindByName("blackout_viewcontroller")
 	blackout_viewcontroller[1]:Remove()
 end)
-
-if PLAY_EPISODE_1 == 1 then -- EPISODIC DOES NOT WORK DUE TO MODEL ANIMATION ERRORS!
-	NEXT_MAP = "ep1_citadel_00"
-else
-	NEXT_MAP = "d1_trainstation_01"
-end
