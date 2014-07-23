@@ -2,7 +2,7 @@ ALLOWED_VEHICLE = "Jeep"
 
 INFO_PLAYER_SPAWN = {Vector(2087, -5411, 1375), 0}
 
-NEXT_MAP = "d2_coast_11"
+NEXT_MAP = "d2_coast_12"
 
 hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
 	pl:Give("weapon_crowbar")
