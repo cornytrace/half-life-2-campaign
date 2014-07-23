@@ -380,7 +380,7 @@ function GM:OnNPCKilled(npc, killer, weapon)
 	
 	// If the killer is a player then decide what to do with their points
 	if killer && killer:IsValid() && killer:IsPlayer() && npc && npc:IsValid() then
-		if table.HasValue(GODLIKE_NPCS, npc:GetClass()) then
+		if table.HasValue(GODLIKE_NPCS, npc:GetClass()) || npc:GetName() == "rocketman" then
 			game.ConsoleCommand("kickid "..killer:UserID().." \"Killed an important NPC actor!\"\n")
 			GAMEMODE:RestartMap()
 		elseif NPC_POINT_VALUES[npc:GetClass()] then
