@@ -4,8 +4,8 @@ TRIGGER_CHECKPOINT = {
 	{Vector(-7564, -286, -3408), Vector(-7461, -157, -3279)}
 }
 
-if file.Exists("hl2c_d1_town_03.txt", "DATA") then
-	file.Delete("hl2c_d1_town_03.txt")
+if file.Exists("hl2c_data/hl2c_d1_town_03.txt", "DATA") then
+	file.Delete("hl2c_data/hl2c_d1_town_03.txt")
 end
 
 hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)

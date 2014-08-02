@@ -8,7 +8,7 @@ TRIGGER_CHECKPOINT = {
 
 hook.Add("PlayerUse", "hl2cPlayerUse", function(pl, ent)
 	if ent:GetClass() == "func_door" then
-		file.Write("hl2c_d2_coast_08.txt", "We have been to d2_coast_08 & pushed the button!")
+		file.Write("hl2c_data/hl2c_d2_coast_08.txt", "We have been to d2_coast_08 & pushed the button!")
 	end
 end)
 

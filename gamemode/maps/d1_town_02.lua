@@ -1,4 +1,4 @@
-if file.Exists("hl2c_d1_town_03.txt", "DATA") then
+if file.Exists("hl2c_data/hl2c_d1_town_03.txt", "DATA") then
 	INFO_PLAYER_SPAWN = {Vector(-3755, -28, -3366), 0}
 	NEXT_MAP = "d1_town_02a"
 	TRIGGER_CHECKPOINT = {

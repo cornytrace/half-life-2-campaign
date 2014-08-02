@@ -1,6 +1,6 @@
 ALLOWED_VEHICLE = "Jeep"
 
-if file.Exists("hl2c_d2_coast_08.txt", "DATA") then
+if file.Exists("hl2c_data/hl2c_d2_coast_08.txt", "DATA") then
 	INFO_PLAYER_SPAWN = {Vector(2896, 5250, 1580), 180}
 	NEXT_MAP = "d2_coast_09"
 else
@@ -9,7 +9,7 @@ else
 end
 
 hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
-	if file.Exists("hl2c_d2_coast_08.txt", "DATA") then
+	if file.Exists("hl2c_data/hl2c_d2_coast_08.txt", "DATA") then
 		local func_brushes = ents.FindByClass("func_brush")
 		func_brushes[1]:Remove()
 		func_brushes[2]:Remove()

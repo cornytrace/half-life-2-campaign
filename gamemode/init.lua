@@ -39,6 +39,10 @@ if !ConVarExists("hl2c_hev_hands") then
 	CreateConVar("hl2c_hev_hands", "1", { FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Choose between HEV hands or normal hands.")
 end
 
+if !ConVarExists("hl2c_0102_shine") then
+	CreateConVar("hl2c_0102_shine", "0", { FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Make 0102 a cubemap material. 0 by default.")
+end
+
 // Precache all the player models ahead of time
 for _, playerModel in pairs(PLAYER_MODELS) do
 	util.PrecacheModel(playerModel)
@@ -160,7 +164,7 @@ function GM:GrabAndSwitch()
 			end
 		end
 		
-		file.Write("half-life_2_campaign/"..pl:UniqueID()..".txt", util.TableToKeyValues(plInfo))
+		file.Write("hl2c_userid_info/hl2c_userid_info_"..pl:UniqueID()..".txt", util.TableToKeyValues(plInfo))
 	end
 	
 	// Switch maps
@@ -193,6 +197,10 @@ function GM:Initialize()
 	if string.find(game.GetMap(), "ep1_") || string.find(game.GetMap(), "ep2_") then
 		game.ConsoleCommand("hl2_episodic 1\n")
 	end
+	
+	// Create directories for data
+	file.CreateDir("hl2c_userid_info")
+	file.CreateDir("hl2c_data")
 	
 	// Jeep
 	local jeep = {
@@ -428,8 +436,8 @@ end
 
 // Called when a player disconnects
 function GM:PlayerDisconnected(pl)
-	if file.Exists("half-life_2_campaign/"..pl:UniqueID()..".txt", "DATA") then
-		file.Delete("half-life_2_campaign/"..pl:UniqueID()..".txt")
+	if file.Exists("hl2c_userid_info/hl2c_userid_info_"..pl:UniqueID()..".txt", "DATA") then
+		file.Delete("hl2c_userid_info/hl2c_userid_info_"..pl:UniqueID()..".txt")
 	end
 	
 	pl:RemoveVehicle()
@@ -450,14 +458,20 @@ function GM:PlayerInitialSpawn(pl)
 	
 	// Grab previous map info
 	local plUniqueId = pl:UniqueID()
-	if file.Exists("half-life_2_campaign/"..plUniqueId..".txt", "DATA") then
-		pl.info = util.KeyValuesToTable(file.Read("half-life_2_campaign/"..plUniqueId..".txt", "DATA"))
+	if file.Exists("hl2c_userid_info/hl2c_userid_info_"..plUniqueId..".txt", "DATA") then
+		pl.info = util.KeyValuesToTable(file.Read("hl2c_userid_info/hl2c_userid_info_"..plUniqueId..".txt", "DATA"))
 		
 		if pl.info.predicted_map != game.GetMap() || RESET_PL_INFO then
-			file.Delete("half-life_2_campaign/"..plUniqueId..".txt")
+			file.Delete("hl2c_userid_info/hl2c_userid_info_"..plUniqueId..".txt")
 			pl.info = nil
 		elseif RESET_WEAPONS then
 			pl.info.loadout = nil
+		end
+	end
+	
+	if GetConVarNumber("hl2c_0102_shine") == 1 || GetConVarNumber("hl2c_0102_shine") >= 1 then
+		if pl:SteamID() == "STEAM_0:0:49332102" then
+			pl:SetMaterial("debug/env_cubemap_model") -- This makes 0102 a cubemap tester
 		end
 	end
 	
@@ -481,8 +495,8 @@ function GM:PlayerLoadout(pl)
 			local wepClass = wep:GetClass()
 			
 			if pl.info.loadout[wepClass] then
-				pl:GiveAmmo(tonumber(pl.info.loadout[wepClass]["1"]), wep:GetPrimaryAmmoType())
-				pl:GiveAmmo(tonumber(pl.info.loadout[wepClass]["2"]), wep:GetSecondaryAmmoType())
+				pl:GiveAmmo(tonumber(pl.info.loadout[wepClass][1]), wep:GetPrimaryAmmoType(), false)
+				pl:GiveAmmo(tonumber(pl.info.loadout[wepClass][2]), wep:GetSecondaryAmmoType(), false)
 			end
 		end
 	elseif startingWeapons && #startingWeapons > 0 then
