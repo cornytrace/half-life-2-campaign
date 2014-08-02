@@ -806,10 +806,12 @@ function GM:Think()
 	for _, pl in pairs(player.GetAll()) do
 		if pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN == false then	
 			pl:SetPlayerColor( Vector( 1,0.5,0 ) )
+			pl:EquipSuit()
 		elseif pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN == true then
 			pl:SetPlayerColor( Vector( 0,0.5,1 ) )
+			pl:RemoveSuit()
 		elseif PLAYER_IS_CITIZEN != false && PLAYER_IS_CITIZEN != true then
-			pl:ChatPrint("WARNING!!! PLAYER_IS_CITIZEN is not defined!")
+			pl:PrintMessage(HUD_PRINTCENTER, "WARNING!!! PLAYER_IS_CITIZEN is not defined!")
 		end
 	end
 	

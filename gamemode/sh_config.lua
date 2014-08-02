@@ -39,7 +39,7 @@ NPC_POINT_VALUES = {
 // Seconds before the map is restarted (Default: 10)
 RESTART_MAP_TIME = 10
 
-// Models the player can be
+// Models the player is restricted by
 PLAYER_MODELS = {
 	"models/player/group01/female_01.mdl",
 	"models/player/group01/female_02.mdl",
@@ -81,3 +81,4 @@ VULNERABLE_TIME = 0
 
 // Is player a citizen? Used for start of HL2 only!
 PLAYER_IS_CITIZEN = false
+PLAYER_SUIT_THINK = false
