@@ -2,7 +2,7 @@
 {
 	"base"		"base"
 	"title"		"Half-Life 2 Campaign"
-	"version"	"1.26.GM13"  
+	"version"	"1.2.7"  
 
 	"author_name" 	"AMT"
 	"author_email" 	"theis.andrew@gmail.com"
