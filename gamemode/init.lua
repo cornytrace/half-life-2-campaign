@@ -23,6 +23,11 @@ include("sh_init.lua")
 // Include the configuration for this map
 include("maps/"..game.GetMap()..".lua")
 
+// Include custom configurations for this map
+if file.Exists("hl2c_custom/maps/"..game.GetMap()..".lua", "LUA") then
+	include("hl2c_custom/maps/"..game.GetMap()..".lua")
+end
+
 // Create console variables to make these config vars easier to access
 if !ConVarExists("hl2c_admin_physgun") then
 	CreateConVar("hl2c_admin_physgun", ADMIN_NOCLIP, FCVAR_NOTIFY)
@@ -194,6 +199,7 @@ function GM:Initialize()
 	game.ConsoleCommand("hl2_episodic 0\n")
 	game.ConsoleCommand("mp_falldamage 1\n")
 	game.ConsoleCommand("physgun_limited 1\n")
+	game.ConsoleCommand("ai_serverragdolls 0\n")
 	if string.find(game.GetMap(), "ep1_") || string.find(game.GetMap(), "ep2_") then
 		game.ConsoleCommand("hl2_episodic 1\n")
 	end
@@ -359,6 +365,12 @@ function GM:InitPostEntity()
 	local triggerMultiples = ents.FindByName("fall_trigger")
 	for _, tm in pairs(triggerMultiples) do
 		tm:Remove()
+	end
+	
+	// Remove global_newgame entities since they are useless.
+	local globalNewgame = ents.FindByName("global_newgame_template")
+	for _, gng in pairs(globalNewgame) do
+		gng:Remove()
 	end
 end 
 
@@ -833,6 +845,8 @@ function GM:Think()
 		if pl.nextEnergyCycle < CurTime() then
 			if !pl:InVehicle() && ((pl:GetVelocity():Length() > 315 && pl:KeyDown(IN_SPEED)) || pl:WaterLevel() == 3) && pl.energy > 0 then
 				pl.energy = pl.energy - 1
+			elseif pl:FlashlightIsOn() && pl.energy > 0 then
+				pl.energy = pl.energy - .2
 			elseif pl.energy < 100 then
 				pl.energy = pl.energy + .5
 			end
@@ -849,6 +863,11 @@ function GM:Think()
 			if !pl.sprintDisabled then
 				pl.sprintDisabled = true
 				GAMEMODE:SetPlayerSpeed(pl, 190, 190)
+			end
+			
+			// Disable flashlight
+			if pl:FlashlightIsOn() && pl.energy < 2 then
+				pl:Flashlight(false)
 			end
 			
 			// Now remove health if underwater
