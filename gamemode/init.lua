@@ -570,6 +570,12 @@ end
 function GM:PlayerSpawn(pl)
 
 	player_manager.SetPlayerClass( pl, "player_coop" )
+	
+	if ALLOWED_VEHICLE then
+		for _, pl in pairs(player.GetAll()) do
+			pl:ChatPrint("Press F3 to spawn a vehicle.")
+		end
+	end
 
 	if pl:Team() == TEAM_DEAD then
 		pl:Spectate(OBS_MODE_ROAMING)
@@ -902,7 +908,8 @@ function GM:Think()
 	
 	// Open area portals
 	if nextAreaOpenTime <= CurTime() then
-		for _, fap in pairs(ents.FindByClass("func_areaportal")) do
+		local portalArea = ents.FindByClass("func_areaportal")
+		for _, fap in pairs(portalArea) do
 			fap:Fire("Open")
 		end
 		
