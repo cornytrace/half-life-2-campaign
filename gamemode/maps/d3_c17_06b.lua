@@ -4,6 +4,8 @@ TRIGGER_CHECKPOINT = {
 	{Vector(3537, 1539, 256), Vector(3616, 1581, 349)}
 }
 
+TRIGGER_DELAYMAPLOAD = {Vector(5040, 1575, 75), Vector(5105, 1497, 174)}
+
 hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
 	for _, fdr in pairs(ents.FindByClass("func_door_rotating")) do
 		if fdr:GetName() == "long_plank_1_rotator" then

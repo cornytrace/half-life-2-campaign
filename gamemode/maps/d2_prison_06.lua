@@ -35,7 +35,4 @@ hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
 	local meetup = ents.FindByName("lcs_np_meetup02")
 	meetup[1]:Fire("addoutput", "OnCompletion hl2c_alyx_temp_follow,Activate,,0,1", "3.0")
 	meetup[1]:Fire("addoutput", "OnCompletion alyx,StopScripting,,5.0,1", "15.0")
-
-	local endfollow = ents.FindByName("lcs_np_meetup_pushbutton_1")
-	endfollow[1]:Fire("addoutput", "OnTrigger1 hl2c_alyx_temp_follow,Deactivate,,0,1", "3.0")
 end)

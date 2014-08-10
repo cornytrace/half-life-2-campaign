@@ -6,6 +6,8 @@ TRIGGER_CHECKPOINT = {
 	{Vector(8328, 1202, -412), Vector(8450, 1242, -292)}
 }
 
+TRIGGER_DELAYMAPLOAD = {Vector(4997, 265, 270), Vector(5187, 295, 357)}
+
 hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
 	pl:Give("weapon_crowbar")
 	pl:Give("weapon_pistol")
