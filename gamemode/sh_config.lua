@@ -81,4 +81,3 @@ VULNERABLE_TIME = 0
 
 // Is player a citizen? Used for start of HL2 only!
 PLAYER_IS_CITIZEN = false
-PLAYER_SUIT_THINK = false
