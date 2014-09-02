@@ -124,9 +124,9 @@ function GM:HUDPaint()
 	if restartMapCountdownStart then
 		local restartMapCountdownLeft = math.Round(restartMapCountdownStart + RESTART_MAP_TIME - CurTime())
 		if restartMapCountdownLeft > 0 then
-			draw.DrawText("Restarting Map in "..tostring(restartMapCountdownLeft), "impact32", centerX, h - h * 0.075, Color(255, 255, 255, 200), 1)
+			draw.DrawText("Restarting in "..tostring(restartMapCountdownLeft), "impact32", centerX, h - h * 0.075, Color(255, 255, 255, 200), 1)
 		else
-			draw.DrawText("Restarting Map!", "impact32", centerX, h - h * 0.075, Color(255, 255, 255, 200), 1)
+			draw.DrawText("", "impact32", centerX, h - h * 0.075, Color(255, 255, 255, 200), 1)
 		end
 	end
 	
@@ -160,6 +160,9 @@ function GM:Initialize()
 	self.ShowScoreboard = false
 	showNav = true
 	scoreboard = nil
+	
+	// Create a Client ConVar to control player halos
+	CreateClientConVar( "hl2c_player_halo", "0", true, false )
 	
 	// Fonts we will need later
 	surface.CreateFont("arial16", {
@@ -211,6 +214,12 @@ function GM:Initialize()
 	language.Add("npc_grenade_frag", "Grenade")
 end
 
+function GM:PreDrawHalos()
+	local ent = ents.FindByClass("player")
+	if GetConVarNumber("hl2c_player_halo") != 0 then
+		halo.Add(ent, Color(255, 127, 0), 5, 5, 2, true, true)
+	end
+end
 
 function GM:PostDrawViewModel( vm, pl, weapon )
 

@@ -2,6 +2,8 @@ INFO_PLAYER_SPAWN = {Vector(-3931, 6784, 5), 0}
 
 NEXT_MAP = "d3_c17_10b"
 
+RESPAWN_ALLOWED = true
+
 hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
 	pl:Give("weapon_crowbar")
 	pl:Give("weapon_pistol")

@@ -18,7 +18,7 @@ TRIGGER_DELAYMAPLOAD = {Vector(-1912, 183, 585), Vector(-2021, 124, 683)}
 
 hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
 	local player_pod = ents.FindByName("pod")
-	player_pod[1]:Fire("unlock", "", "5")
+	player_pod[1]:Fire("unlock", "", "120")
 
 	local blackout_viewcontroller = ents.FindByName("blackout_viewcontroller")
 	blackout_viewcontroller[1]:Remove()

@@ -2,7 +2,7 @@ ALLOWED_VEHICLE = "Jeep"
 
 INFO_PLAYER_SPAWN = {Vector(2087, -5411, 1375), 0}
 
-NEXT_MAP = "d2_coast_12"
+NEXT_MAP = "d2_coast_11"
 
 TRIGGER_DELAYMAPLOAD = {Vector(5017, 2698, 323), Vector(4946, 3105, 520)}
 

@@ -1,6 +1,14 @@
 NEXT_MAP = "d2_coast_12"
 
+RESPAWN_ALLOWED = true
+
+TRIGGER_DELAYMAPLOAD = {Vector(4241, 6827, 576), Vector(4654, 6807, 696)}
+
 hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
+	-- Fix antlions not spawning on players
+	pl:Fire("addoutput", "targetname !player", "0.0")
+	
+	-- Give items
 	pl:Give("weapon_crowbar")
 	pl:Give("weapon_pistol")
 	pl:Give("weapon_smg1")

@@ -2,6 +2,8 @@ INFO_PLAYER_SPAWN = {Vector(2684, -1865, 260), 90}
 
 NEXT_MAP = "d3_c17_11"
 
+RESPAWN_ALLOWED = true
+
 TRIGGER_CHECKPOINT = {
 	{Vector(2562, -995, 257), Vector(2805, -954, 378)},
 	{Vector(3529, 869, 512), Vector(3576, 1038, 619)},

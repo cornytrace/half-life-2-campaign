@@ -1,5 +1,7 @@
 NEXT_MAP = "d3_c17_10a"
 
+RESPAWN_ALLOWED = true
+
 hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
 	pl:Give("weapon_crowbar")
 	pl:Give("weapon_pistol")

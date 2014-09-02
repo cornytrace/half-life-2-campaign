@@ -9,7 +9,6 @@ GM.Author = "AMT"
 GM.Email = "N/A"
 GM.Website = "N/A"
 
-
 // Constants
 FRIENDLY_NPCS = {
 	"npc_citizen"
@@ -42,14 +41,12 @@ function GM:CreateTeams()
 	team.SetUp(TEAM_DEAD, "Dead", Color(81, 124, 199, 255))
 end
 
-
 // Called when map entities spawn
 function GM:EntityKeyValue(ent, key, value)
 	if ent:GetClass() == "trigger_changelevel" && key == "map" && SERVER then
 		ent.map = key
 	end
 end
-
 
 // Called when a gravity gun is attempting to punt something
 function GM:GravGunPunt(pl, ent) 

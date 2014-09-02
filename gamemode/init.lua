@@ -19,13 +19,11 @@ AddCSLuaFile("player_class/player_coop.lua")
 // Include the required lua files
 include("sh_init.lua")
 
-
 // Include the configuration for this map
-include("maps/"..game.GetMap()..".lua")
-
-// Include custom configurations for this map
 if file.Exists("hl2c_custom/maps/"..game.GetMap()..".lua", "LUA") then
 	include("hl2c_custom/maps/"..game.GetMap()..".lua")
+else
+	include("maps/"..game.GetMap()..".lua")
 end
 
 // Create console variables to make these config vars easier to access
@@ -46,6 +44,10 @@ end
 
 if !ConVarExists("hl2c_0102_shine") then
 	CreateConVar("hl2c_0102_shine", "0", { FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Make 0102 a cubemap material. 0 by default.")
+end
+
+if !ConVarExists("hl2c_respawn_instead_of_restart") then
+	CreateConVar("hl2c_respawn_instead_of_restart", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Make players respawn instead of the map being restarted.")
 end
 
 // Precache all the player models ahead of time
@@ -115,15 +117,19 @@ end
 function GM:DoPlayerDeath(pl, attacker, dmgInfo)
 	pl.deathPos = pl:EyePos()
 	
-	// Add to deadPlayers table to prevent respawning on re-connect
-	if !table.HasValue(deadPlayers, pl:UniqueID()) then
-		table.insert(deadPlayers, pl:UniqueID())
+	if RESPAWN_ALLOWED != true then
+		// Add to deadPlayers table to prevent respawning on re-connect
+		if !table.HasValue(deadPlayers, pl:UniqueID()) then
+			table.insert(deadPlayers, pl:UniqueID())
+		end
 	end
 	
 	pl:RemoveVehicle()
 	pl:Flashlight(false)
 	pl:CreateRagdoll()
-	pl:SetTeam(TEAM_DEAD)
+	if RESPAWN_ALLOWED != true then
+		pl:SetTeam(TEAM_DEAD)
+	end
 	pl:AddDeaths(1)
 end
 
@@ -172,6 +178,16 @@ function GM:GrabAndSwitch()
 		file.Write("hl2c_userid_info/hl2c_userid_info_"..pl:UniqueID()..".txt", util.TableToKeyValues(plInfo))
 	end
 	
+	-- Crash Recovery --
+	if game.IsDedicated(true) then
+		local savedMap = {}
+		
+		savedMap.predicted_crash = NEXT_MAP
+		
+		file.Write("hl2c_data/hl2c_crash_recovery.txt", util.TableToKeyValues(savedMap))
+	end
+	-- End --
+	
 	// Switch maps
 	game.ConsoleCommand("changelevel "..NEXT_MAP.."\n")
 end
@@ -183,6 +199,7 @@ changingLevel = false
 checkpointPositions = {}
 nextAreaOpenTime = 0
 startingWeapons = {}
+isRestartingMap = false
 
 // Called immediately after starting the gamemode  
 function GM:Initialize()
@@ -192,6 +209,7 @@ function GM:Initialize()
 	checkpointPositions = {}
 	nextAreaOpenTime = 0
 	startingWeapons = {}
+	isRestartingMap = false
 	
 	// We want regular fall damage and the ai to attack players and stuff
 	game.ConsoleCommand("ai_disabled 0\n")
@@ -361,16 +379,76 @@ function GM:InitPostEntity()
 	umsg.Vector(checkpointPositions[#checkpointPositions])
 	umsg.End()
 	
+	-- Crash Recovery --
+	// Let me execute this so we go back to the map that we crashed on.
+		if game.IsDedicated(true) then
+			if file.Exists("hl2c_data/hl2c_crash_recovery.txt", "DATA") then
+			mapRecover = util.KeyValuesToTable(file.Read("hl2c_data/hl2c_crash_recovery.txt", "DATA"))
+		
+				if mapRecover.predicted_crash != game.GetMap() then
+					game.ConsoleCommand("changelevel "..mapRecover.predicted_crash.."\n")
+				end
+			end
+		end
+	-- End --
+	
+	// Fix the env_global entities
+	if !string.find(game.GetMap(), "d1_trainstation_") then
+		local envG1 = ents.Create("env_global")
+		envG1:SetPos(Vector(150, -100, 150))
+		envG1:SetKeyValue("targetname", "hl2c_gordon_criminal_global")
+		envG1:SetKeyValue("globalstate", "gordon_precriminal")
+		envG1:SetKeyValue("spawnflags", "1")
+		envG1:SetKeyValue("initialstate", "0")
+		envG1:Spawn()
+		envG1:Activate()
+		envG1:Fire("turnoff", "", "1.0")
+		
+		local envG2 = ents.Create("env_global")
+		envG2:SetPos(Vector(-150, 100, -150))
+		envG2:SetKeyValue("targetname", "hl2c_gordon_invulnerable_global")
+		envG2:SetKeyValue("globalstate", "gordon_invulnerable")
+		envG2:SetKeyValue("spawnflags", "1")
+		envG2:SetKeyValue("initialstate", "0")
+		envG2:Spawn()
+		envG2:Activate()
+		envG2:Fire("turnoff", "", "1.0")
+	end
+	
 	// Remove fall_trigger triggers which cause the game to "end"
 	local triggerMultiples = ents.FindByName("fall_trigger")
-	for _, tm in pairs(triggerMultiples) do
-		tm:Remove()
+	for _, falltrigger in pairs(triggerMultiples) do
+		falltrigger:Remove()
 	end
 	
 	// Remove global_newgame entities since they are useless.
 	local globalNewgame = ents.FindByName("global_newgame_template")
 	for _, gng in pairs(globalNewgame) do
 		gng:Remove()
+	end
+	
+	// Remove global_newgame entities since they are useless.
+	local globalNewgameLocalItems = ents.FindByName("global_newgame_template_local_items")
+	for _, gngli in pairs(globalNewgameLocalItems) do
+		gngli:Remove()
+	end
+	
+	// Remove global_newgame entities since they are useless.
+	local globalNewgameAmmo = ents.FindByName("global_newgame_template_ammo")
+	for _, gnga in pairs(globalNewgameAmmo) do
+		gnga:Remove()
+	end
+	
+	// Remove global_newgame entities since they are useless.
+	local globalNewgameBaseItems = ents.FindByName("global_newgame_template_base_items")
+	for _, gngbi in pairs(globalNewgameBaseItems) do
+		gngbi:Remove()
+	end
+	
+	// Remove start_item entities since they are useless.
+	local startItemsTemplate = ents.FindByName("start_item_template")
+	for _, sIT in pairs(startItemsTemplate) do
+		sIT:Remove()
 	end
 end 
 
@@ -402,7 +480,7 @@ function GM:OnNPCKilled(npc, killer, weapon)
 	if killer && killer:IsValid() && killer:IsPlayer() && npc && npc:IsValid() then
 		if table.HasValue(GODLIKE_NPCS, npc:GetClass()) || npc:GetName() == "rocketman" then
 			game.ConsoleCommand("kickid "..killer:UserID().." \"Killed an important NPC actor!\"\n")
-			GAMEMODE:RestartMap()
+			GAMEMODE:RestartMapDueToNPCDeath()
 		elseif NPC_POINT_VALUES[npc:GetClass()] then
 			killer:AddFrags(NPC_POINT_VALUES[npc:GetClass()])
 		else
@@ -571,8 +649,14 @@ function GM:PlayerSpawn(pl)
 
 	player_manager.SetPlayerClass( pl, "player_coop" )
 	
+	// If respawn is allowed, print a message.
+	if RESPAWN_ALLOWED then
+		pl:ChatPrint("You're allowed to respawn in this map.")
+	end
+	
+	// If vehicles are allowed, print a message.
 	if ALLOWED_VEHICLE then
-		for _, pl in pairs(player.GetAll()) do
+		if pl:Team() != TEAM_DEAD then
 			pl:ChatPrint("Press F3 to spawn a vehicle.")
 		end
 	end
@@ -686,6 +770,53 @@ end
 
 // Called automatically and by the console command
 function GM:RestartMap()
+	isRestartingMap = true
+
+	if GetConVarNumber("hl2c_respawn_instead_of_restart") == 1 || GetConVarNumber("hl2c_respawn_instead_of_restart") >= 1 then
+	else
+	if changingLevel then
+		return
+	end
+	
+	changingLevel = true
+	end
+	
+	umsg.Start("RestartMap", RecipientFilter():AddAllPlayers())
+	umsg.Long(CurTime())
+	umsg.End()
+	
+	for _, pl in pairs(player.GetAll()) do
+		pl:SendLua("GAMEMODE.ShowScoreboard = true")
+	end
+	
+	if GetConVarNumber("hl2c_respawn_instead_of_restart") == 1 || GetConVarNumber("hl2c_respawn_instead_of_restart") >= 1 then
+	timer.Simple(RESTART_MAP_TIME, function() GAMEMODE:ExecuteRespawn() end)
+	else
+	timer.Simple(RESTART_MAP_TIME, function() game.ConsoleCommand( "changelevel "..game.GetMap().."\n") end)
+	end
+end
+concommand.Add("hl2c_restart_map", function(pl, command, arguments) if pl:IsAdmin() then GAMEMODE:RestartMap() end end)
+
+function GM:ExecuteRespawn()
+	table.Empty(deadPlayers)
+
+	for _, pl in pairs(player.GetAll()) do
+		if pl:Team() != TEAM_ALIVE then
+			pl:SetTeam(TEAM_ALIVE)
+			pl:UnSpectate()
+			pl:KillSilent()
+			pl:AddDeaths(-1)
+			pl:Spawn()
+		end
+	end
+	
+	isRestartingMap = false
+end
+
+// Called automatically
+function GM:RestartMapDueToNPCDeath()
+	isRestartingMap = true
+	
 	if changingLevel then
 		return
 	end
@@ -698,12 +829,11 @@ function GM:RestartMap()
 	
 	for _, pl in pairs(player.GetAll()) do
 		pl:SendLua("GAMEMODE.ShowScoreboard = true")
+		pl:ChatPrint("An important NPC actor died!")
 	end
 	
 	timer.Simple(RESTART_MAP_TIME, function() game.ConsoleCommand( "changelevel "..game.GetMap().."\n") end)
 end
-concommand.Add("hl2c_restart_map", function(pl, command, arguments) if pl:IsAdmin() then GAMEMODE:RestartMap() end end)
-
 
 // Called every time a player does damage to an npc
 function GM:ScaleNPCDamage(npc, hitGroup, dmgInfo)
@@ -764,7 +894,7 @@ end
 
 
 // Called when player wants a vehicle
-function GM:ShowSpare1(pl)
+function GM:ShowSpare1(pl, pos, range)
 	if pl:Team() != TEAM_ALIVE || pl:InVehicle() then
 		return
 	end
@@ -816,20 +946,20 @@ end
 
 // Called every frame 
 function GM:Think()
-	if #player.GetAll() > 0 && #team.GetPlayers(TEAM_ALIVE) + #team.GetPlayers(TEAM_COMPLETED_MAP) <= 0 then
-		GAMEMODE:RestartMap()
+	if isRestartingMap == false then
+		if #player.GetAll() > 0 && #team.GetPlayers(TEAM_ALIVE) + #team.GetPlayers(TEAM_COMPLETED_MAP) <= 0 then
+			GAMEMODE:RestartMap()
+		end
 	end
 	
 	// Is player a citizen?
 	for _, pl in pairs(player.GetAll()) do
-		if pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN == false then	
+		if pl:Team() == TEAM_ALIVE && !PLAYER_IS_CITIZEN || pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN != true then	
 			pl:SetPlayerColor( Vector( 1,0.5,0 ) )
 			pl:EquipSuit()
-		elseif pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN == true then
+		elseif pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN || pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN != false then
 			pl:SetPlayerColor( Vector( 0,0.5,1 ) )
 			pl:RemoveSuit()
-		elseif PLAYER_IS_CITIZEN != false && PLAYER_IS_CITIZEN != true then
-			pl:PrintMessage(HUD_PRINTCENTER, "WARNING!!! PLAYER_IS_CITIZEN is not defined!")
 		end
 	end
 	
