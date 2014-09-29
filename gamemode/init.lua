@@ -34,20 +34,20 @@ end
 
 // Let's see if we can turn the playermodel restrictions off
 if !ConVarExists("hl2c_playermodel_restrictions") then
-	CreateConVar("hl2c_playermodel_restrictions", "1", { FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Sets whether you want to use custom playermodels.")
+	CreateConVar("hl2c_playermodel_restrictions", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Sets whether you want to use custom playermodels.")
 end
 
 // Do we want HEV hands?
 if !ConVarExists("hl2c_hev_hands") then
-	CreateConVar("hl2c_hev_hands", "1", { FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Choose between HEV hands or normal hands.")
+	CreateConVar("hl2c_hev_hands", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Choose between HEV hands or normal hands.")
 end
 
 if !ConVarExists("hl2c_0102_shine") then
-	CreateConVar("hl2c_0102_shine", "0", { FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Make 0102 a cubemap material. 0 by default.")
+	CreateConVar("hl2c_0102_shine", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Make 0102 a cubemap material. 0 by default.")
 end
 
-if !ConVarExists("hl2c_respawn_instead_of_restart") then
-	CreateConVar("hl2c_respawn_instead_of_restart", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Make players respawn instead of the map being restarted.")
+if !ConVarExists("hl2c_bot_spectate") then
+	CreateConVar("hl2c_bot_spectate", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Bots are useless, lets get rid of them.")
 end
 
 // Precache all the player models ahead of time
@@ -240,7 +240,7 @@ function GM:Initialize()
 	
 	// Named Jeep
 	local namedjeep = {
-		Name = "Named Jeep",
+		Name = "Jeep",
 		Class = "prop_vehicle_jeep_old",
 		Model = "models/buggy.mdl",
 		KeyValues = {	
@@ -253,7 +253,7 @@ function GM:Initialize()
 	
 	// Airboat
 	local airboat = {
-		Name = "Airboat Gun",
+		Name = "Airboat",
 		Class = "prop_vehicle_airboat",
 		Category = Category,
 		Model = "models/airboat.mdl",
@@ -263,6 +263,19 @@ function GM:Initialize()
 		}
 	}
 	list.Set("Vehicles", "Airboat", airboat)
+	
+	// Named Airboat
+	local namedAirboat = {
+		Name = "Named Airboat",
+		Class = "prop_vehicle_airboat",
+		Category = Category,
+		Model = "models/airboat.mdl",
+		KeyValues = {
+			vehiclescript = "scripts/vehicles/airboat.txt",
+			EnableGun = 0
+		}
+	}
+	list.Set("Vehicles", "Named Airboat", airboat)
 	
 	// Airboat w/gun
 	local airboatGun = {
@@ -311,20 +324,22 @@ function GM:InitPostEntity()
 	end
 	
 	// Setup TRIGGER_CHECKPOINT
-	if TRIGGER_CHECKPOINT then
-		for _, tcpInfo in pairs(TRIGGER_CHECKPOINT) do
-			local tcp = ents.Create("trigger_checkpoint")
-			
-			tcp.min = tcpInfo[1]
-			tcp.max = tcpInfo[2]
-			tcp.pos = tcp.max - ((tcp.max - tcp.min) / 2)
-			tcp.skipSpawnpoint = tcpInfo[3]
-			tcp.OnTouchRun = tcpInfo[4]
-			
-			tcp:SetPos(tcp.pos)
-			tcp:Spawn()
-			
-			table.insert(checkpointPositions, tcp.pos)
+	if !game.SinglePlayer() then
+		if TRIGGER_CHECKPOINT then
+			for _, tcpInfo in pairs(TRIGGER_CHECKPOINT) do
+				local tcp = ents.Create("trigger_checkpoint")
+				
+				tcp.min = tcpInfo[1]
+				tcp.max = tcpInfo[2]
+				tcp.pos = tcp.max - ((tcp.max - tcp.min) / 2)
+				tcp.skipSpawnpoint = tcpInfo[3]
+				tcp.OnTouchRun = tcpInfo[4]
+				
+				tcp:SetPos(tcp.pos)
+				tcp:Spawn()
+				
+				table.insert(checkpointPositions, tcp.pos)
+			end
 		end
 	end
 	
@@ -360,7 +375,7 @@ function GM:InitPostEntity()
 	// Setup TRIGGER_DELAYMAPLOAD
 	if TRIGGER_DELAYMAPLOAD then
 		GAMEMODE:CreateTDML(TRIGGER_DELAYMAPLOAD[1], TRIGGER_DELAYMAPLOAD[2])
-		
+	
 		for _, tcl in pairs(ents.FindByClass("trigger_changelevel")) do
 			tcl:Remove()
 		end
@@ -393,7 +408,7 @@ function GM:InitPostEntity()
 	-- End --
 	
 	// Fix the env_global entities
-	if !string.find(game.GetMap(), "d1_trainstation_") then
+	if !string.find(game.GetMap(), "d1_trainstation_") && !game.SinglePlayer() then
 		local envG1 = ents.Create("env_global")
 		envG1:SetPos(Vector(150, -100, 150))
 		envG1:SetKeyValue("targetname", "hl2c_gordon_criminal_global")
@@ -415,12 +430,22 @@ function GM:InitPostEntity()
 		envG2:Fire("turnoff", "", "1.0")
 	end
 	
-	// Remove fall_trigger triggers which cause the game to "end"
-	local triggerMultiples = ents.FindByName("fall_trigger")
-	for _, falltrigger in pairs(triggerMultiples) do
-		falltrigger:Remove()
+	// NEW! Custom Weapon spawning.
+	// It gets boring having to re-do all the map.lua files so people spawn with custom weapons, lets do something to fix that..
+	if !string.find(game.GetMap(), "d1_trainstation_") then
+		if file.Exists("hl2c_custom/hl2c_custom_weapons.lua", "LUA") then
+			include("hl2c_custom/hl2c_custom_weapons.lua")
+		end
 	end
 	
+	if !game.SinglePlayer() then
+		// Remove fall_trigger triggers which cause the game to "end"
+		local triggerMultiples = ents.FindByName("fall_trigger")
+		for _, falltrigger in pairs(triggerMultiples) do
+			falltrigger:Remove()
+		end
+	end
+		
 	// Remove global_newgame entities since they are useless.
 	local globalNewgame = ents.FindByName("global_newgame_template")
 	for _, gng in pairs(globalNewgame) do
@@ -449,6 +474,18 @@ function GM:InitPostEntity()
 	local startItemsTemplate = ents.FindByName("start_item_template")
 	for _, sIT in pairs(startItemsTemplate) do
 		sIT:Remove()
+	end
+	
+	// Remove player_spawn_item_template entities since they are useless.
+	local playerSpawnItemsTemplate = ents.FindByName("player_spawn_items_template")
+	for _, pSIT in pairs(playerSpawnItemsTemplate) do
+		pSIT:Remove()
+	end
+	
+	// Remove player_spawn_item_maker entities since they are useless.
+	local playerSpawnItemsMaker = ents.FindByName("player_spawn_items_maker")
+	for _, pSIM in pairs(playerSpawnItemsMaker) do
+		pSIM:Remove()
 	end
 end 
 
@@ -520,6 +557,11 @@ function GM:PlayerCanPickupWeapon(pl, weapon)
 		return false
 	end
 	
+	if game.SinglePlayer() && weapon:GetClass() == "weapon_medkit" then -- Medkits are stupid in Singleplayer.
+		weapon:Remove()
+		return false
+	end
+	
 	return true
 end
 
@@ -542,6 +584,19 @@ end
 function GM:PlayerInitialSpawn(pl)
 	pl.startTime = CurTime()
 	pl:SetTeam(TEAM_ALIVE)
+	
+	// If a player joined, print a message.
+	PrintMessage(HUD_PRINTTALK, pl:Nick() .." has joined the game.")
+	
+	// If respawn is allowed, print a message.
+	if RESPAWN_ALLOWED then
+		pl:ChatPrint("You're allowed to respawn in this map.")
+	end
+	
+	// If vehicles are allowed, print a message.
+	if ALLOWED_VEHICLE then
+		pl:ChatPrint("Press F3 to spawn a vehicle.")
+	end
 	
 	// CUSTOM COLLISION CHECK FOR PLAYERS SO YOU CANNOT COLLIDE WITH EACH OTHER OR FRIENDLY NPCS
 	pl:SetCustomCollisionCheck(true)
@@ -648,19 +703,17 @@ end
 function GM:PlayerSpawn(pl)
 
 	player_manager.SetPlayerClass( pl, "player_coop" )
-	
-	// If respawn is allowed, print a message.
-	if RESPAWN_ALLOWED then
-		pl:ChatPrint("You're allowed to respawn in this map.")
-	end
-	
-	// If vehicles are allowed, print a message.
-	if ALLOWED_VEHICLE then
-		if pl:Team() != TEAM_DEAD then
-			pl:ChatPrint("Press F3 to spawn a vehicle.")
-		end
-	end
 
+	if pl:IsBot() && GetConVarNumber("hl2c_bot_spectate") != 0 then
+		pl:SetTeam(TEAM_BOT_SPECTATOR)
+	end
+	
+	if pl:Team() == TEAM_BOT_SPECTATOR then
+		pl:Spectate(OBS_MODE_IN_EYE)
+		pl:SetNoTarget(true)
+		return
+	end
+	
 	if pl:Team() == TEAM_DEAD then
 		pl:Spectate(OBS_MODE_ROAMING)
 		pl:SetPos(pl.deathPos)
@@ -675,6 +728,7 @@ function GM:PlayerSpawn(pl)
 	pl.nextEnergyCycle = 0
 	pl.nextSetHealth = 0
 	pl.sprintDisabled = false
+	pl.flashlightDisabled = false
 	pl.vulnerable = true
 	timer.Simple(VULNERABLE_TIME, function(pl) if pl && pl:IsValid() then pl.vulnerable = true end end, pl)
 	
@@ -760,8 +814,22 @@ end
 
 // Called when a player uses something
 function GM:PlayerUse(pl, ent)
-	if ent:GetName() == "telescope_button" || pl:Team() != TEAM_ALIVE then
+	if (ent:GetName() == "telescope_button" && !game.SinglePlayer()) || pl:Team() != TEAM_ALIVE then
 		return false
+	end
+	
+	if !game.SinglePlayer() then
+		if GetConVarNumber("hl2c_passenger_seats") == 1 || GetConVarNumber("hl2c_passenger_seats") >= 1 then
+			if ent:GetName() == "hl2c_passenger_seat" then
+				if GetConVarNumber("hl2c_passenger_seats_weapons") == 1 || GetConVarNumber("hl2c_passenger_seats_weapons") >= 1 then
+					pl:SetAllowWeaponsInVehicle(true)
+				elseif GetConVarNumber("hl2c_passenger_seats_weapons") == 0 then
+					pl:SetAllowWeaponsInVehicle(false)
+				end
+			elseif ent:GetName() != "hl2c_passenger_seat" then
+				pl:SetAllowWeaponsInVehicle(false)
+			end
+		end
 	end
 	
 	return true
@@ -771,15 +839,12 @@ end
 // Called automatically and by the console command
 function GM:RestartMap()
 	isRestartingMap = true
-
-	if GetConVarNumber("hl2c_respawn_instead_of_restart") == 1 || GetConVarNumber("hl2c_respawn_instead_of_restart") >= 1 then
-	else
+	
 	if changingLevel then
 		return
 	end
 	
 	changingLevel = true
-	end
 	
 	umsg.Start("RestartMap", RecipientFilter():AddAllPlayers())
 	umsg.Long(CurTime())
@@ -789,29 +854,28 @@ function GM:RestartMap()
 		pl:SendLua("GAMEMODE.ShowScoreboard = true")
 	end
 	
-	if GetConVarNumber("hl2c_respawn_instead_of_restart") == 1 || GetConVarNumber("hl2c_respawn_instead_of_restart") >= 1 then
-	timer.Simple(RESTART_MAP_TIME, function() GAMEMODE:ExecuteRespawn() end)
-	else
 	timer.Simple(RESTART_MAP_TIME, function() game.ConsoleCommand( "changelevel "..game.GetMap().."\n") end)
-	end
 end
 concommand.Add("hl2c_restart_map", function(pl, command, arguments) if pl:IsAdmin() then GAMEMODE:RestartMap() end end)
+
 
 function GM:ExecuteRespawn()
 	table.Empty(deadPlayers)
 
 	for _, pl in pairs(player.GetAll()) do
-		if pl:Team() != TEAM_ALIVE then
+		if pl:Team() == TEAM_DEAD then
 			pl:SetTeam(TEAM_ALIVE)
 			pl:UnSpectate()
 			pl:KillSilent()
 			pl:AddDeaths(-1)
 			pl:Spawn()
+			pl:SetNoTarget(false)
 		end
 	end
 	
 	isRestartingMap = false
 end
+
 
 // Called automatically
 function GM:RestartMapDueToNPCDeath()
@@ -834,6 +898,22 @@ function GM:RestartMapDueToNPCDeath()
 	
 	timer.Simple(RESTART_MAP_TIME, function() game.ConsoleCommand( "changelevel "..game.GetMap().."\n") end)
 end
+
+
+// 0102 is a good chap sometimes
+function GM:HL2CForceRespawn()
+	table.Empty(deadPlayers)
+
+	for _, pl in pairs(player.GetAll()) do
+		if pl:Team() == TEAM_DEAD then
+			pl:SetTeam(TEAM_ALIVE)
+			pl:UnSpectate()
+			pl:Spawn()
+			pl:SetNoTarget(false)
+		end
+	end
+end
+
 
 // Called every time a player does damage to an npc
 function GM:ScaleNPCDamage(npc, hitGroup, dmgInfo)
@@ -919,9 +999,14 @@ function GM:ShowSpare1(pl, pos, range)
 			pl.vehicle:SetKeyValue(a, b)
 		end
 		
-		// Enable gun on jeep
-		if ALLOWED_VEHICLE == "Jeep" then
-			pl.vehicle:Fire("enablegun", 1)
+		// Enable name on Jeep
+		if ALLOWED_VEHICLE == "Named Jeep" then
+			pl.vehicle:Fire("addoutput", "targetname jeep")
+		end
+		
+		// Enable name on Airboat
+		if ALLOWED_VEHICLE == "Named Airboat" then
+			pl.vehicle:Fire("addoutput", "targetname airboat")
 		end
 		
 		// Set pos/angle and spawn
@@ -931,6 +1016,41 @@ function GM:ShowSpare1(pl, pos, range)
 		pl.vehicle:Spawn()
 		pl.vehicle:Activate()
 		pl.vehicle.creator = pl
+		
+		// Passenger seats in Singleplayer are useless.
+		if !game.SinglePlayer() then
+			// Passenger Seats for Jeep
+			if GetConVarNumber("hl2c_passenger_seats") == 1 || GetConVarNumber("hl2c_passenger_seats") >= 1 then
+				if ALLOWED_VEHICLE == "Jeep" || ALLOWED_VEHICLE == "Named Jeep" then
+					local spawnedvehicle = pl.vehicle
+					local seat = ents.Create( "prop_vehicle_prisoner_pod" )
+					seat:SetModel( "models/nova/jeep_seat.mdl" )
+					seat:SetPos( pl.vehicle:LocalToWorld( Vector( 21,-32,18 ) ) )
+					seat:SetAngles( pl.vehicle:LocalToWorldAngles( Angle( 0,-3.5,0 ) ) )
+					seat:Spawn()
+					seat:SetKeyValue( "limitview", "1" )
+					seat:SetKeyValue( "targetname", "hl2c_passenger_seat" )
+					seat:SetMoveType( MOVETYPE_NONE )
+					seat:SetParent( spawnedvehicle, -1 )
+				end
+			end
+			
+			// Passenger Seats for Airboat
+			if GetConVarNumber("hl2c_passenger_seats") == 1 || GetConVarNumber("hl2c_passenger_seats") >= 1 then
+				if ALLOWED_VEHICLE == "Airboat" || ALLOWED_VEHICLE == "Named Airboat" || ALLOWED_VEHICLE == "Airboat Gun" then
+					local spawnedvehicle2 = pl.vehicle
+					local seat2 = ents.Create( "prop_vehicle_prisoner_pod" )
+					seat2:SetModel( "models/nova/airboat_seat.mdl" )
+					seat2:SetPos( pl.vehicle:LocalToWorld( Vector( 0,-48,68 ) ) )
+					seat2:SetAngles( pl.vehicle:LocalToWorldAngles( Angle( 0,0,0 ) ) )
+					seat2:Spawn()
+					seat2:SetKeyValue( "limitview", "1" )
+					seat2:SetKeyValue( "targetname", "hl2c_passenger_seat" )
+					seat2:SetMoveType( MOVETYPE_NONE )
+					seat2:SetParent( spawnedvehicle2, -1 )
+				end
+			end
+		end
 	else
 		pl:PrintMessage(HUD_PRINTTALK, "You may not spawn a vehicle at this time.")
 	end
@@ -979,8 +1099,10 @@ function GM:Think()
 		
 		// Sprinting and water level
 		if pl.nextEnergyCycle < CurTime() then
-			if !pl:InVehicle() && ((pl:GetVelocity():Length() > 315 && pl:KeyDown(IN_SPEED)) || pl:WaterLevel() == 3) && pl.energy > 0 then
+			if !pl:InVehicle() && ((pl:GetVelocity():Length() > 315 && pl:KeyDown(IN_SPEED))) then
 				pl.energy = pl.energy - 1
+			elseif pl:WaterLevel() == 3 && pl.energy > 0 then
+				pl.energy = pl.energy - .5
 			elseif pl:FlashlightIsOn() && pl.energy > 0 then
 				pl.energy = pl.energy - .2
 			elseif pl.energy < 100 then
@@ -999,11 +1121,6 @@ function GM:Think()
 			if !pl.sprintDisabled then
 				pl.sprintDisabled = true
 				GAMEMODE:SetPlayerSpeed(pl, 190, 190)
-			end
-			
-			// Disable flashlight
-			if pl:FlashlightIsOn() && pl.energy < 2 then
-				pl:Flashlight(false)
 			end
 			
 			// Now remove health if underwater
@@ -1025,6 +1142,23 @@ function GM:Think()
 			GAMEMODE:SetPlayerSpeed(pl, 190, 320)
 		end
 		
+		// Flashlight should run out eventually
+		if pl.energy < 2 && pl:FlashlightIsOn() && !pl.flashlightDisabled then
+			pl.flashlightDisabled = true
+		elseif pl.energy >= 30 && pl.flashlightDisabled then
+			pl.flashlightDisabled = false
+		end
+		
+		// If the player is a citizen, that means the HEV suit isn't on, so we should turn the flashlight off
+		if pl:FlashlightIsOn() && PLAYER_IS_CITIZEN == true then
+			pl:Flashlight(false)
+		end
+		
+		// Turn the flashlight off
+		if pl.flashlightDisabled && pl:FlashlightIsOn() then
+			pl:Flashlight(false)
+		end
+		
 		// Give back health if we can
 		if pl:WaterLevel() <= 2 && pl.nextSetHealth < CurTime() && pl.healthRemoved > 0 then
 			pl.nextSetHealth = CurTime() + 1
@@ -1036,14 +1170,21 @@ function GM:Think()
 	// Change the difficulty according to number of players
 	difficulty = math.Clamp((#player.GetAll() + 1) / 3, DIFFICULTY_RANGE[1], DIFFICULTY_RANGE[2])
 	
-	// Open area portals
-	if nextAreaOpenTime <= CurTime() then
+	-- // Open area portals -- THIS IS OLD CODE!
+	-- if nextAreaOpenTime <= CurTime() then
+		-- local portalArea = ents.FindByClass("func_areaportal")
+		-- for _, fap in pairs(portalArea) do
+			-- fap:Fire("Open")
+		-- end
+		
+		-- nextAreaOpenTime = CurTime() + 3
+	-- end
+	// Open area portals without regrets and only on multiplayer
+	if !game.SinglePlayer() then
 		local portalArea = ents.FindByClass("func_areaportal")
 		for _, fap in pairs(portalArea) do
 			fap:Fire("Open")
 		end
-		
-		nextAreaOpenTime = CurTime() + 3
 	end
 end
 

@@ -54,11 +54,6 @@ function PANEL:Paint()
 		surface.SetDrawColor(Color(125, 125, 125, 75))
 		surface.DrawRect(0, 0, self:GetWide(), self:GetTall())
 	end
-	
-	-- if self.pl:GetFriendStatus() == "friend" then
-		-- surface.SetTexture(FRIEND_INDICATOR)
-		-- surface.DrawTexturedRect(0, 0, 64, 64) 
-	-- end
 end
 
 
@@ -100,7 +95,7 @@ function PANEL:UpdatePlayerRow()
 	elseif self.pl:Team() == TEAM_ALIVE then
 		self.statusLabel:SetText(team.GetName(self.pl:Team()))
 	else
-		self.statusLabel:SetText("")
+		self.statusLabel:SetText(team.GetName(self.pl:Team()))
 	end
 	
 	self.scoreLabel:SetText(self.pl:Frags())
@@ -110,6 +105,11 @@ function PANEL:UpdatePlayerRow()
 	self.pingLabel:SetText(self.pl:Ping())
 	
 	self:InvalidateLayout()
+	
+	if self.pl:GetFriendStatus() == "friend" then
+		surface.SetTexture(FRIEND_INDICATOR)
+		surface.DrawTexturedRect(0, 0, 64, 64) 
+	end
 end
 
 

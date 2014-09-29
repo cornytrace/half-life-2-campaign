@@ -124,9 +124,9 @@ function GM:HUDPaint()
 	if restartMapCountdownStart then
 		local restartMapCountdownLeft = math.Round(restartMapCountdownStart + RESTART_MAP_TIME - CurTime())
 		if restartMapCountdownLeft > 0 then
-			draw.DrawText("Restarting in "..tostring(restartMapCountdownLeft), "impact32", centerX, h - h * 0.075, Color(255, 255, 255, 200), 1)
+			draw.DrawText("Restarting Map in "..tostring(restartMapCountdownLeft), "impact32", centerX, h - h * 0.075, Color(255, 255, 255, 200), 1)
 		else
-			draw.DrawText("", "impact32", centerX, h - h * 0.075, Color(255, 255, 255, 200), 1)
+			draw.DrawText("Restarting Map!", "impact32", centerX, h - h * 0.075, Color(255, 255, 255, 200), 1)
 		end
 	end
 	
