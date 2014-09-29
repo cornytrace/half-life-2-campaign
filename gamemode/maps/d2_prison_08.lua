@@ -1,5 +1,7 @@
 NEXT_MAP = "d3_c17_01"
 
+RESPAWN_INSTEAD_OF_RESTART_OVERRIDE = true
+
 TRIGGER_CHECKPOINT = {
 	{Vector(-1013, 953, 960), Vector(-803, 1001, 1122)},
 	{Vector(-496, 631, 928), Vector(-355, 672, 1083)},

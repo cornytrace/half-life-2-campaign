@@ -25,6 +25,8 @@ hook.Add("EntityRemoved", "hl2cEntityRemoved", function(ent)
 end)
 
 hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
-	local viewcontroller = ents.FindByName("viewcontrol_ickycam")
-	viewcontroller[1]:Remove()
+	if !game.SinglePlayer() then
+		local viewcontroller = ents.FindByName("viewcontrol_ickycam")
+		viewcontroller[1]:Remove()
+	end
 end)

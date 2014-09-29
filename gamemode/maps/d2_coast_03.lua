@@ -7,6 +7,9 @@ hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
 	wep:SetPos(Vector(8513, 4299, 270))
 	wep:Spawn()
 	wep:Activate()
+	
+	local zoom = ents.FindByName("telescope_zoom")
+	zoom[1]:Remove()
 
 	local filter = ents.FindByName("jeep_filter")
 	filter[1]:Remove()
