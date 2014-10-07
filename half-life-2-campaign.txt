@@ -1,19 +1,90 @@
-"Gamemode"
+"half-life-2-campaign"
 {
 	"base"		"base"
 	"title"		"Half-Life 2 Campaign"
-	"version"	"1.2.8"  
-
-	"author_name" 	"AMT"
-	"author_email" 	"theis.andrew@gmail.com"
-	"author_url"	"http://www.andrewtheis.com"
-	
-  "description"	"Play Half-Life 2 in cooperative mode online or on Single-Player."
-	"selectable"	"1"
-	
 	"menusystem"	"1"
 
 	"settings"
 	{
+		1
+		{
+			"name"		"sv_password"
+			"text"		"Server Password"
+			"help"		"Set the server password for your server."
+			"type"		"Text"
+			"default"	""
+		}
+
+		2
+		{
+			"name"		"hl2c_admin_physgun"
+			"text"		"ADMIN Physgun"
+			"help"		"When this is enabled, admins of the server get Physics Guns."
+			"type"		"CheckBox"
+			"default"	"0"
+		}
+		
+		3
+		{
+			"name"		"hl2c_admin_noclip"
+			"text"		"ADMIN No-Clip"
+			"help"		"When this is enabled, admins of the server are allowed to No-Clip."
+			"type"		"CheckBox"
+			"default"	"0"
+		}
+		
+		4
+		{
+			"name"		"hl2c_playermodel_restrictions"
+			"text"		"Citizen/Rebel Playermodels Only"
+			"help"		"Should we only allow Citizen/Rebel playermodels?"
+			"type"		"CheckBox"
+			"default"	"1"
+		}
+		
+		5
+		{
+			"name"		"hl2c_hev_hands"
+			"text"		"HEV Arms"
+			"help"		"Should player viewmodels have HEV Arms?"
+			"type"		"CheckBox"
+			"default"	"1"
+		}
+		
+		6
+		{
+			"name"		"hl2c_allow_stunstick"
+			"text"		"Allow Stunstick"
+			"help"		"In Multiplayer, are stunsticks allowed to be picked up?"
+			"type"		"CheckBox"
+			"default"	"0"
+		}
+		
+		7
+		{
+			"name"		"hl2c_passenger_seats"
+			"text"		"Passenger Seats"
+			"help"		"In Multiplayer, should we allow passenger seats?"
+			"type"		"CheckBox"
+			"default"	"1"
+		}
+		
+		8
+		{
+			"name"		"hl2c_drop_weapon_on_death"
+			"text"		"Drop Weapon on death"
+			"help"		"In Multiplayer, does the player drop his current weapon on death?"
+			"type"		"CheckBox"
+			"default"	"1"
+		}
+
+		9
+		{
+			"name"		"hl2c_allow_respawn"
+			"text"		"Allow Respawn"
+			"help"		"In Multiplayer, can players respawn without having to spectate?"
+			"type"		"CheckBox"
+			"default"	"0"
+		}
 	}
 }
