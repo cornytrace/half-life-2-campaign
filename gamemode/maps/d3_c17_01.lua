@@ -1,7 +1,5 @@
 NEXT_MAP = "d3_c17_02"
 
-RESPAWN_INSTEAD_OF_RESTART_OVERRIDE = false
-
 TRIGGER_CHECKPOINT = {
 	{Vector(-7050, -1475, 1), Vector(-7003, -1307, 107)},
 	{Vector(-6586, -1030, 1), Vector(-6363, -990, 122)}
@@ -11,7 +9,7 @@ hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
 	pl:Give("weapon_crowbar")
 	pl:Give("weapon_pistol")
 	pl:Give("weapon_smg1")
-	pl:Give("weapon_medkit")
+	pl:Give("weapon_medkit_hl2c")
 	pl:Give("weapon_frag")
 	pl:Give("weapon_357")
 	pl:Give("weapon_physcannon")

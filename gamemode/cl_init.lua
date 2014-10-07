@@ -161,8 +161,10 @@ function GM:Initialize()
 	showNav = true
 	scoreboard = nil
 	
-	// Create a Client ConVar to control player halos
+	// Create a Client ConVar to control halos
 	CreateClientConVar( "hl2c_player_halo", "0", true, false )
+	CreateClientConVar( "hl2c_vital_npc_halo", "0", true, false )
+	CreateClientConVar( "hl2c_citizen_npc_halo", "0", true, false )
 	
 	// Fonts we will need later
 	surface.CreateFont("arial16", {
@@ -215,9 +217,21 @@ function GM:Initialize()
 end
 
 function GM:PreDrawHalos()
-	local ent = ents.FindByClass("player")
-	if GetConVarNumber("hl2c_player_halo") != 0 then
-		halo.Add(ent, Color(255, 127, 0), 5, 5, 2, true, true)
+	local entpl = ents.FindByClass("player")
+	if GetConVarNumber("hl2c_player_halo") >= 1 then
+		halo.Add(entpl, Color(255, 127, 0), 5, 5, 2, true, true)
+	end
+	
+	local entvnpc1 = ents.FindByClass("npc_alyx")
+	local entvnpc2 = ents.FindByClass("npc_barney")
+	if GetConVarNumber("hl2c_vital_npc_halo") >= 1 then
+		halo.Add(entvnpc1, Color(127, 106, 0), 5, 5, 2, true, false)
+		halo.Add(entvnpc2, Color(0, 106, 127), 5, 5, 2, true, false)
+	end
+	
+	local entcnpc1 = ents.FindByClass("npc_citizen")
+	if GetConVarNumber("hl2c_citizen_npc_halo") >= 1 then
+		halo.Add(entcnpc1, Color(0, 255, 0), 5, 5, 2, true, false)
 	end
 end
 

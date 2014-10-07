@@ -42,13 +42,31 @@ if !ConVarExists("hl2c_hev_hands") then
 	CreateConVar("hl2c_hev_hands", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Choose between HEV hands or normal hands.")
 end
 
-if !ConVarExists("hl2c_0102_shine") then
-	CreateConVar("hl2c_0102_shine", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Make 0102 a cubemap material. 0 by default.")
+// Debug: Show who is an admin
+if !ConVarExists("hl2c_admin_material") then
+	CreateConVar("hl2c_admin_material", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Toggle whether admins should have a cubemap material.")
 end
 
+// Toggle whether bots should go on their own team(Spectator)
 if !ConVarExists("hl2c_bot_spectate") then
 	CreateConVar("hl2c_bot_spectate", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Bots are useless, lets get rid of them.")
 end
+
+// ONLY WORKS IN MULTIPLAYER. Allow weapon_stunsticks?
+if !ConVarExists("hl2c_allow_stunstick") then
+	CreateConVar("hl2c_allow_stunstick", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Only usable in Multiplayer. Toggle whether players can pick up Stunsticks.")
+end
+
+// ONLY WORKS IN MULTIPLAYER. Should players drop their current weapon on death?
+if !ConVarExists("hl2c_drop_weapon_on_death") then
+	CreateConVar("hl2c_drop_weapon_on_death", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Only usable in Multiplayer. Toggle whether players drop weapons on death.")
+end
+
+// ONLY WORKS IN MULTIPLAYER. Can players respawn?
+if !ConVarExists("hl2c_allow_respawn") then
+	CreateConVar("hl2c_allow_respawn", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Only usable in Multiplayer. Do players get to respawn instead of being dead forever?")
+end
+
 
 // Precache all the player models ahead of time
 for _, playerModel in pairs(PLAYER_MODELS) do
@@ -117,7 +135,7 @@ end
 function GM:DoPlayerDeath(pl, attacker, dmgInfo)
 	pl.deathPos = pl:EyePos()
 	
-	if RESPAWN_ALLOWED != true then
+	if GetConVarNumber("hl2c_allow_respawn") == 0 || game.SinglePlayer() then
 		// Add to deadPlayers table to prevent respawning on re-connect
 		if !table.HasValue(deadPlayers, pl:UniqueID()) then
 			table.insert(deadPlayers, pl:UniqueID())
@@ -127,7 +145,7 @@ function GM:DoPlayerDeath(pl, attacker, dmgInfo)
 	pl:RemoveVehicle()
 	pl:Flashlight(false)
 	pl:CreateRagdoll()
-	if RESPAWN_ALLOWED != true then
+	if GetConVarNumber("hl2c_allow_respawn") == 0 || game.SinglePlayer() then
 		pl:SetTeam(TEAM_DEAD)
 	end
 	pl:AddDeaths(1)
@@ -199,7 +217,6 @@ changingLevel = false
 checkpointPositions = {}
 nextAreaOpenTime = 0
 startingWeapons = {}
-isRestartingMap = false
 
 // Called immediately after starting the gamemode  
 function GM:Initialize()
@@ -209,7 +226,6 @@ function GM:Initialize()
 	checkpointPositions = {}
 	nextAreaOpenTime = 0
 	startingWeapons = {}
-	isRestartingMap = false
 	
 	// We want regular fall damage and the ai to attack players and stuff
 	game.ConsoleCommand("ai_disabled 0\n")
@@ -407,8 +423,8 @@ function GM:InitPostEntity()
 		end
 	-- End --
 	
-	// Fix the env_global entities
-	if !string.find(game.GetMap(), "d1_trainstation_") && !game.SinglePlayer() then
+	// Fix NPCs not killing or targeting you
+	if (!string.find(game.GetMap(), "d1_trainstation_") || string.find(game.GetMap(), "d1_trainstation_04") || string.find(game.GetMap(), "d1_trainstation_06")) && !game.SinglePlayer() then
 		local envG1 = ents.Create("env_global")
 		envG1:SetPos(Vector(150, -100, 150))
 		envG1:SetKeyValue("targetname", "hl2c_gordon_criminal_global")
@@ -516,8 +532,10 @@ function GM:OnNPCKilled(npc, killer, weapon)
 	// If the killer is a player then decide what to do with their points
 	if killer && killer:IsValid() && killer:IsPlayer() && npc && npc:IsValid() then
 		if table.HasValue(GODLIKE_NPCS, npc:GetClass()) || npc:GetName() == "rocketman" then
-			game.ConsoleCommand("kickid "..killer:UserID().." \"Killed an important NPC actor!\"\n")
-			GAMEMODE:RestartMapDueToNPCDeath()
+			if !game.SinglePlayer() then -- This should only end up being used in multiplayer.
+				game.ConsoleCommand("kickid "..killer:UserID().." \"Killed an important NPC actor!\"\n")
+				GAMEMODE:RestartMapDueToNPCDeath()
+			end
 		elseif NPC_POINT_VALUES[npc:GetClass()] then
 			killer:AddFrags(NPC_POINT_VALUES[npc:GetClass()])
 		else
@@ -552,12 +570,17 @@ end
 
 // Called when a player tries to pickup a weapon
 function GM:PlayerCanPickupWeapon(pl, weapon) 
-	if pl:Team() != TEAM_ALIVE || weapon:GetClass() == "weapon_stunstick" || (weapon:GetClass() == "weapon_physgun" && !pl:IsAdmin()) then
+	if pl:Team() != TEAM_ALIVE || (game.SinglePlayer() && weapon:GetClass() == "weapon_stunstick") || (weapon:GetClass() == "weapon_physgun" && !pl:IsAdmin()) then
 		weapon:Remove()
 		return false
 	end
 	
-	if game.SinglePlayer() && weapon:GetClass() == "weapon_medkit" then -- Medkits are stupid in Singleplayer.
+	if weapon:GetClass() == "weapon_stunstick" && GetConVarNumber("hl2c_allow_stunstick") == 0 then
+		weapon:Remove()
+		return false
+	end
+	
+	if game.SinglePlayer() && weapon:GetClass() == "weapon_medkit_hl2c" then -- Medkits are stupid in Singleplayer.
 		weapon:Remove()
 		return false
 	end
@@ -586,11 +609,16 @@ function GM:PlayerInitialSpawn(pl)
 	pl:SetTeam(TEAM_ALIVE)
 	
 	// If a player joined, print a message.
-	PrintMessage(HUD_PRINTTALK, pl:Nick() .." has joined the game.")
+	if !game.SinglePlayer() then
+		if !pl:IsBot() then
+			PrintMessage(HUD_PRINTTALK, pl:Nick() .." has joined the game.")
+		end
+	end
 	
-	// If respawn is allowed, print a message.
-	if RESPAWN_ALLOWED then
-		pl:ChatPrint("You're allowed to respawn in this map.")
+	// In Singleplayer, don't let the players wait for the level to change or restart
+	if game.SinglePlayer() then
+		NEXT_MAP_TIME = 0
+		RESTART_MAP_TIME = 0
 	end
 	
 	// If vehicles are allowed, print a message.
@@ -599,7 +627,10 @@ function GM:PlayerInitialSpawn(pl)
 	end
 	
 	// CUSTOM COLLISION CHECK FOR PLAYERS SO YOU CANNOT COLLIDE WITH EACH OTHER OR FRIENDLY NPCS
-	pl:SetCustomCollisionCheck(true)
+	// Make sure this only applies in multiplayer!
+	if !game.SinglePlayer() then
+		pl:SetCustomCollisionCheck(true)
+	end
 	
 	// Grab previous map info
 	local plUniqueId = pl:UniqueID()
@@ -614,9 +645,9 @@ function GM:PlayerInitialSpawn(pl)
 		end
 	end
 	
-	if GetConVarNumber("hl2c_0102_shine") == 1 || GetConVarNumber("hl2c_0102_shine") >= 1 then
-		if pl:SteamID() == "STEAM_0:0:49332102" then
-			pl:SetMaterial("debug/env_cubemap_model") -- This makes 0102 a cubemap tester
+	if GetConVarNumber("hl2c_admin_material") >= 1 then
+		if pl:IsAdmin() then
+			pl:SetMaterial("debug/env_cubemap_model") -- Admins will be given this material.
 		end
 	end
 	
@@ -651,7 +682,7 @@ function GM:PlayerLoadout(pl)
 	end
 	
 	// Lastly give physgun to admins
-	if GetConVarNumber("hl2c_admin_physgun") == 1 && pl:IsAdmin() then
+	if GetConVarNumber("hl2c_admin_physgun") >= 1 && pl:IsAdmin() then
 		pl:Give("weapon_physgun")
 	end
 end
@@ -681,7 +712,7 @@ function GM:PlayerSetModel(pl)
 	else
 		local modelName = player_manager.TranslatePlayerModel(pl:GetInfo("cl_playermodel"))
 		
-		if GetConVarNumber("hl2c_playermodel_restrictions") == 1 then
+		if GetConVarNumber("hl2c_playermodel_restrictions") >= 1 then
 			if modelName && table.HasValue(PLAYER_MODELS, string.lower(modelName)) then
 				pl.modelName = modelName
 			else
@@ -703,6 +734,12 @@ end
 function GM:PlayerSpawn(pl)
 
 	player_manager.SetPlayerClass( pl, "player_coop" )
+	
+	if GetConVarNumber("hl2c_drop_weapon_on_death") >= 1 && !game.SinglePlayer() then
+		pl:ShouldDropWeapon(true)
+	else
+		pl:ShouldDropWeapon(false)
+	end
 
 	if pl:IsBot() && GetConVarNumber("hl2c_bot_spectate") != 0 then
 		pl:SetTeam(TEAM_BOT_SPECTATOR)
@@ -769,35 +806,35 @@ function GM:PlayerSpawn(pl)
 		pl:KillSilent()
 	end
 
-	if GetConVarNumber("hl2c_hev_hands") == 1 then
+	if GetConVarNumber("hl2c_hev_hands") >= 1 then
 		pl:SetupHands()
 	elseif GetConVarNumber("hl2c_hev_hands") != 1 then
 			local oldhands = pl:GetHands()
-	if ( IsValid( oldhands ) ) then oldhands:Remove() end
+			if ( IsValid( oldhands ) ) then oldhands:Remove() end
 
-	local hands = ents.Create( "gmod_hands" )
-	if ( IsValid( hands ) ) then
-		pl:SetHands( hands )
-		hands:SetOwner( pl )
+			local hands = ents.Create( "gmod_hands" )
+				if ( IsValid( hands ) ) then
+					pl:SetHands( hands )
+					hands:SetOwner( pl )
 
-		-- Which hands should we use?
-		local cl_playermodel = pl:GetInfo( "cl_playermodel" )
-		local info = player_manager.TranslatePlayerHands( cl_playermodel )
-		if ( info ) then
-			hands:SetModel( info.model )
-			hands:SetSkin( info.skin )
-			hands:SetBodyGroups( info.body )
-		end
+					-- Which hands should we use?
+					local cl_playermodel = pl:GetInfo( "cl_playermodel" )
+					local info = player_manager.TranslatePlayerHands( cl_playermodel )
+					if ( info ) then
+						hands:SetModel( info.model )
+						hands:SetSkin( info.skin )
+						hands:SetBodyGroups( info.body )
+					end
 
-		-- Attach them to the viewmodel
-		local vm = pl:GetViewModel( 0 )
-		hands:AttachToViewmodel( vm )
+					-- Attach them to the viewmodel
+					local vm = pl:GetViewModel( 0 )
+					hands:AttachToViewmodel( vm )
 
-		vm:DeleteOnRemove( hands )
-		pl:DeleteOnRemove( hands )
+					vm:DeleteOnRemove( hands )
+					pl:DeleteOnRemove( hands )
 
-		hands:Spawn()
- 	end
+					hands:Spawn()
+				end
 	end
 	
 end
@@ -819,7 +856,7 @@ function GM:PlayerUse(pl, ent)
 	end
 	
 	if !game.SinglePlayer() then
-		if GetConVarNumber("hl2c_passenger_seats") == 1 || GetConVarNumber("hl2c_passenger_seats") >= 1 then
+		if GetConVarNumber("hl2c_passenger_seats") >= 1 then
 			if ent:GetName() == "hl2c_passenger_seat" then
 				if GetConVarNumber("hl2c_passenger_seats_weapons") == 1 || GetConVarNumber("hl2c_passenger_seats_weapons") >= 1 then
 					pl:SetAllowWeaponsInVehicle(true)
@@ -838,7 +875,6 @@ end
 
 // Called automatically and by the console command
 function GM:RestartMap()
-	isRestartingMap = true
 	
 	if changingLevel then
 		return
@@ -851,7 +887,9 @@ function GM:RestartMap()
 	umsg.End()
 	
 	for _, pl in pairs(player.GetAll()) do
-		pl:SendLua("GAMEMODE.ShowScoreboard = true")
+		if !game.SinglePlayer() then
+			pl:SendLua("GAMEMODE.ShowScoreboard = true")
+		end
 	end
 	
 	timer.Simple(RESTART_MAP_TIME, function() game.ConsoleCommand( "changelevel "..game.GetMap().."\n") end)
@@ -859,27 +897,8 @@ end
 concommand.Add("hl2c_restart_map", function(pl, command, arguments) if pl:IsAdmin() then GAMEMODE:RestartMap() end end)
 
 
-function GM:ExecuteRespawn()
-	table.Empty(deadPlayers)
-
-	for _, pl in pairs(player.GetAll()) do
-		if pl:Team() == TEAM_DEAD then
-			pl:SetTeam(TEAM_ALIVE)
-			pl:UnSpectate()
-			pl:KillSilent()
-			pl:AddDeaths(-1)
-			pl:Spawn()
-			pl:SetNoTarget(false)
-		end
-	end
-	
-	isRestartingMap = false
-end
-
-
 // Called automatically
 function GM:RestartMapDueToNPCDeath()
-	isRestartingMap = true
 	
 	if changingLevel then
 		return
@@ -893,14 +912,14 @@ function GM:RestartMapDueToNPCDeath()
 	
 	for _, pl in pairs(player.GetAll()) do
 		pl:SendLua("GAMEMODE.ShowScoreboard = true")
-		pl:ChatPrint("An important NPC actor died!")
+		PrintMessage(HUD_PRINTTALK, "An important NPC actor died!")
 	end
 	
 	timer.Simple(RESTART_MAP_TIME, function() game.ConsoleCommand( "changelevel "..game.GetMap().."\n") end)
 end
 
 
-// 0102 is a good chap sometimes
+// Admins can respawn all the dead players.
 function GM:HL2CForceRespawn()
 	table.Empty(deadPlayers)
 
@@ -1066,10 +1085,8 @@ end
 
 // Called every frame 
 function GM:Think()
-	if isRestartingMap == false then
-		if #player.GetAll() > 0 && #team.GetPlayers(TEAM_ALIVE) + #team.GetPlayers(TEAM_COMPLETED_MAP) <= 0 then
-			GAMEMODE:RestartMap()
-		end
+	if #player.GetAll() > 0 && #team.GetPlayers(TEAM_ALIVE) + #team.GetPlayers(TEAM_COMPLETED_MAP) <= 0 then
+		GAMEMODE:RestartMap()
 	end
 	
 	// Is player a citizen?
@@ -1145,7 +1162,7 @@ function GM:Think()
 		// Flashlight should run out eventually
 		if pl.energy < 2 && pl:FlashlightIsOn() && !pl.flashlightDisabled then
 			pl.flashlightDisabled = true
-		elseif pl.energy >= 30 && pl.flashlightDisabled then
+		elseif pl.energy >= 15 && pl.flashlightDisabled then
 			pl.flashlightDisabled = false
 		end
 		

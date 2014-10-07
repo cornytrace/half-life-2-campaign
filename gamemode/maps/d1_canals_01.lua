@@ -10,5 +10,5 @@ TRIGGER_CHECKPOINT = {
 
 hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
 	pl:Give("weapon_crowbar")
-	pl:Give("weapon_medkit")
+	pl:Give("weapon_medkit_hl2c")
 end)

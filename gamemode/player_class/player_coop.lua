@@ -9,8 +9,6 @@ local PLAYER = {}
 
 PLAYER.DisplayName			= "Co-Op Class"
 
-PLAYER.DropWeaponOnDie		= true
-
 PLAYER.TauntCam = TauntCamera()
 
 function PLAYER:GetHandsModel()

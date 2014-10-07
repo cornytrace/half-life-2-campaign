@@ -3,7 +3,8 @@ NEXT_MAP = "ep1_c17_01"
 TRIGGER_DELAYMAPLOAD = {Vector(4528, 3636, 1952), Vector(4645, 3528, 2031)}
 
 TRIGGER_CHECKPOINT = {
-	{Vector(4526, 3639, 449), Vector(4659, 3533, 526)}
+	{Vector(4526, 3639, 449), Vector(4659, 3533, 526)},
+	{Vector(2710, 4099, 417), Vector(2800, 4002, 528)}
 }
 
 hook.Add("InitPostEntity", "hl2cInitPostEntity", function()

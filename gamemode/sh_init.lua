@@ -17,7 +17,7 @@ if !ConVarExists("hl2c_passenger_seats_weapons") then
 	CreateConVar("hl2c_passenger_seats_weapons", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_REPLICATED, FCVAR_ARCHIVE }, "Allow passengers to use weapons in the passenger seat?")
 end
 
-concommand.Add("hl2c_0102_magic", function(pl) if pl:SteamID() == "STEAM_0:0:49332102" then GAMEMODE:HL2CForceRespawn() end end)
+concommand.Add("hl2c_respawn_dead_players", function(pl) if pl:IsAdmin() && !game.SinglePlayer() then GAMEMODE:HL2CForceRespawn() elseif !pl:IsAdmin() then pl:PrintMessage(HUD_PRINTTALK, "Only admins can use this, sorry.") elseif game.SinglePlayer() then pl:PrintMessage(HUD_PRINTTALK, "You cannot use this command in Singleplayer.") end end)
 
 // Constants
 FRIENDLY_NPCS = {
@@ -134,7 +134,7 @@ end
 
 // Called when a physgun tries to pick something up
 function GM:PhysgunPickup(pl, ent)
-	if string.find(ent:GetClass(), "trigger_") || ent:GetClass() == "player" then
+	if string.find(ent:GetClass(), "trigger_") || ent:GetClass() == "player" || ent:GetClass() == "prop_vehicle_prisoner_pod" then
 		return false
 	end
 	
