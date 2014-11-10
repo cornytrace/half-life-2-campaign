@@ -67,6 +67,15 @@ if !ConVarExists("hl2c_allow_respawn") then
 	CreateConVar("hl2c_allow_respawn", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Only usable in Multiplayer. Do players get to respawn instead of being dead forever?")
 end
 
+// ONLY WORKS IN MULTIPLAYER. Make the gamemode add in additions to the gameplay?
+if !ConVarExists("hl2c_additions") then
+	CreateConVar("hl2c_additions", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Only usable in Multiplayer. Add in additions to the gameplay?")
+end
+
+// ONLY WORKS IN MULTIPLAYER. Should we use the old NextMap timer?
+if !ConVarExists("hl2c_old_nextmap_timer") then
+	CreateConVar("hl2c_old_nextmap_timer", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Only usable in Multiplayer. Use old NextMap timer?")
+end
 
 // Precache all the player models ahead of time
 for _, playerModel in pairs(PLAYER_MODELS) do
@@ -131,9 +140,15 @@ function GM:CreatePC(min, max)
 	pc:Spawn()
 end
 
+
 // Called when the player dies
 function GM:DoPlayerDeath(pl, attacker, dmgInfo)
 	pl.deathPos = pl:EyePos()
+	
+	-- A timer to when every player responds to someone dying.
+	if GetConVarNumber("hl2c_additions") >= 1 && !game.SinglePlayer() then
+		timer.Simple(math.random(1, 3), function() GAMEMODE:HeIsDead() end)
+	end
 	
 	if GetConVarNumber("hl2c_allow_respawn") == 0 || game.SinglePlayer() then
 		// Add to deadPlayers table to prevent respawning on re-connect
@@ -149,6 +164,52 @@ function GM:DoPlayerDeath(pl, attacker, dmgInfo)
 		pl:SetTeam(TEAM_DEAD)
 	end
 	pl:AddDeaths(1)
+end
+
+
+// If HL2C Additions is enabled and the game is not in singleplayer, let every player alive & valid say something.
+function GM:HeIsDead()
+	for _, pl in pairs(player.GetAll()) do
+		if (pl:Team() != TEAM_ALIVE) then return end
+		if (!pl:Alive()) then return end
+
+		local modelNameGender = player_manager.TranslatePlayerModel(pl:GetInfo("cl_playermodel"))
+		
+		-- MALE --
+		if modelNameGender && table.HasValue(PLAYER_MODELS_MALE, string.lower(modelNameGender)) then
+			pl:EmitSound(MALE_HEISDEAD_SOUNDS[math.random(1, #MALE_HEISDEAD_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+		end
+		-- MALE --
+		
+		-- FEMALE --
+		if modelNameGender && table.HasValue(PLAYER_MODELS_FEMALE, string.lower(modelNameGender)) then
+			pl:EmitSound(FEMALE_HEISDEAD_SOUNDS[math.random(1, #FEMALE_HEISDEAD_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+		end
+		-- FEMALE --
+		
+		// Do we really want these custom voice lines playing when playermodel restrictions are on? We're gonna have combine rebels if I don't do this.
+		if GetConVarNumber("hl2c_playermodel_restrictions") == 0 then
+		
+			-- COMBINE --
+			if modelNameGender && table.HasValue(PLAYER_MODELS_COMBINE, string.lower(modelNameGender)) then
+				pl:EmitSound(COMBINE_HEISDEAD_SOUNDS[math.random(1, #COMBINE_HEISDEAD_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+			end
+			-- COMBINE --
+			
+			-- ALYX --
+			if modelNameGender == "models/player/alyx.mdl" then
+				pl:EmitSound("vo/npc/alyx/ohgod01.wav", 75, 100, 1, CHAN_VOICE)
+			end
+			-- ALYX --
+			
+			-- BARNEY --
+			if modelNameGender == "models/player/barney.mdl" then
+				pl:EmitSound("vo/npc/barney/ba_ohshit03.wav", 75, 100, 1, CHAN_VOICE)
+			end
+			-- BARNEY --
+		
+		end
+	end
 end
 
 
@@ -234,8 +295,21 @@ function GM:Initialize()
 	game.ConsoleCommand("mp_falldamage 1\n")
 	game.ConsoleCommand("physgun_limited 1\n")
 	game.ConsoleCommand("ai_serverragdolls 0\n")
+	if GetConVarNumber("hl2c_additions") >= 1 then
+		game.ConsoleCommand("sv_rollangle 4\n")
+	else
+		game.ConsoleCommand("sv_rollangle 0\n")
+	end
 	if string.find(game.GetMap(), "ep1_") || string.find(game.GetMap(), "ep2_") then
 		game.ConsoleCommand("hl2_episodic 1\n")
+	end
+	
+	// Kill the engine if HL2 is not mounted.
+	if !game.IsDedicated(true) then
+		if !IsMounted("hl2") then
+			// If the player manages to pass the server disconnection, just kill the whole engine with this.
+			game.ConsoleCommand("disconnect\n")
+		end
 	end
 	
 	// Create directories for data
@@ -423,6 +497,16 @@ function GM:InitPostEntity()
 		end
 	-- End --
 	
+	-- Is HL2 Mounted? --
+	-- // A simple disconnection if the game doesn't have HL2 mounted.
+	-- if !game.IsDedicated(true) then
+		-- if !IsMounted("hl2") then
+			-- // This shuts the listen server down. This won't give an Engine Error.
+			-- game.ConsoleCommand("disconnect\n")
+		-- end
+	-- end
+	-- End --
+	
 	// Fix NPCs not killing or targeting you
 	if (!string.find(game.GetMap(), "d1_trainstation_") || string.find(game.GetMap(), "d1_trainstation_04") || string.find(game.GetMap(), "d1_trainstation_06")) && !game.SinglePlayer() then
 		local envG1 = ents.Create("env_global")
@@ -518,7 +602,11 @@ function GM:NextMap()
 	umsg.Long(CurTime())
 	umsg.End()
 	
-	timer.Simple(NEXT_MAP_TIME, GAMEMODE.GrabAndSwitch)
+	if GetConVarNumber("hl2c_old_nextmap_timer") == 0 then
+		timer.Simple(NEXT_MAP_TIME, function() GAMEMODE:GrabAndSwitch() end) -- New code. After finding out this causes an error sometimes, I had to do this.
+	else
+		timer.Simple(NEXT_MAP_TIME, GAMEMODE.GrabAndSwitch) -- Old code. Seems to still work in current GMod. This way appears more stable for some reason.
+	end
 end
 concommand.Add("hl2c_next_map", function(pl) if pl:IsAdmin() then GAMEMODE:NextMap() end end)
 
@@ -618,7 +706,7 @@ function GM:PlayerInitialSpawn(pl)
 	// In Singleplayer, don't let the players wait for the level to change or restart
 	if game.SinglePlayer() then
 		NEXT_MAP_TIME = 0
-		RESTART_MAP_TIME = 0
+		RESTART_MAP_TIME = 4
 	end
 	
 	// If vehicles are allowed, print a message.
@@ -924,7 +1012,7 @@ function GM:HL2CForceRespawn()
 	table.Empty(deadPlayers)
 
 	for _, pl in pairs(player.GetAll()) do
-		if pl:Team() == TEAM_DEAD then
+		if pl:IsValid() && pl:Team() == TEAM_DEAD then
 			pl:SetTeam(TEAM_ALIVE)
 			pl:UnSpectate()
 			pl:Spawn()
@@ -1091,8 +1179,18 @@ function GM:Think()
 	
 	// Is player a citizen?
 	for _, pl in pairs(player.GetAll()) do
-		if pl:Team() == TEAM_ALIVE && !PLAYER_IS_CITIZEN || pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN != true then	
-			pl:SetPlayerColor( Vector( 1,0.5,0 ) )
+		if pl:Team() == TEAM_ALIVE && !PLAYER_IS_CITIZEN || pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN != true then
+			if GetConVarNumber("hl2c_additions") >= 1 then
+				if (pl:SteamID() == "STEAM_0:0:49332102" || pl:SteamID() == "STEAM_0:0:16219541") && !game.SinglePlayer() then
+					pl:SetPlayerColor( Vector( 0.3,0,1 ) )
+				elseif pl:IsAdmin() && (pl:SteamID() != "STEAM_0:0:49332102" && pl:SteamID() != "STEAM_0:0:16219541") && !game.SinglePlayer() then
+					pl:SetPlayerColor( Vector( 0,0.3,0 ) )
+				else
+					pl:SetPlayerColor( Vector( 1,0.5,0 ) )
+				end
+			else
+				pl:SetPlayerColor( Vector( 1,0.5,0 ) )
+			end
 			pl:EquipSuit()
 		elseif pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN || pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN != false then
 			pl:SetPlayerColor( Vector( 0,0.5,1 ) )
@@ -1200,7 +1298,7 @@ function GM:Think()
 	if !game.SinglePlayer() then
 		local portalArea = ents.FindByClass("func_areaportal")
 		for _, fap in pairs(portalArea) do
-			fap:Fire("Open")
+			fap:Remove()
 		end
 	end
 end

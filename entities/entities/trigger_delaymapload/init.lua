@@ -1,5 +1,3 @@
-AddCSLuaFile()
-
 // Entity information
 ENT.Base = "base_anim"
 ENT.Type = "anim"

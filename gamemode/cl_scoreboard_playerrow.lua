@@ -9,6 +9,8 @@ function PANEL:ApplySchemeSettings()
 	
 	self.statusLabel:SetFont("arial16Bold")
 	
+	self.healthLabel:SetFont("arial16Bold")
+	
 	self.scoreLabel:SetFont("arial16Bold")
 	
 	self.deathsLabel:SetFont("arial16Bold")
@@ -40,6 +42,8 @@ function PANEL:Init()
 	
 	self.statusLabel = vgui.Create("DLabel", self)
 	
+	self.healthLabel = vgui.Create("DLabel", self)
+	
 	self.scoreLabel = vgui.Create("DLabel", self)
 	
 	self.deathsLabel = vgui.Create("DLabel", self)
@@ -55,7 +59,12 @@ function PANEL:Paint()
 		surface.DrawRect(0, 0, self:GetWide(), self:GetTall())
 	end
 	
-	if self.pl:GetFriendStatus() == "friend" then
+	if self.pl:IsValid() && self.pl:Team() == TEAM_DEAD then
+		surface.SetDrawColor(Color(255, 0, 0, 75))
+		surface.DrawRect(0, 0, self:GetWide(), self:GetTall())
+	end
+	
+	if self.pl:IsValid() && self.pl:GetFriendStatus() == "friend" then
 		surface.SetTexture(FRIEND_INDICATOR)
 		surface.DrawTexturedRect(0, 0, 64, 64) 
 	end
@@ -71,7 +80,10 @@ function PANEL:PerformLayout()
 	self.nameLabel:SetPos(65, 9)
 	
 	self.statusLabel:SizeToContents()
-	self.statusLabel:SetPos(self:GetWide() - self.statusLabel:GetWide() - 200, 9)
+	self.statusLabel:SetPos(self:GetWide() - self.statusLabel:GetWide() - 300, 9)
+	
+	self.healthLabel:SizeToContents()
+	self.healthLabel:SetPos(self:GetWide() - self.healthLabel:GetWide() - 200, 9)
 	
 	self.scoreLabel:SizeToContents()
 	self.scoreLabel:SetPos(self:GetWide() - self.scoreLabel:GetWide() - 100, 9)
@@ -97,10 +109,14 @@ function PANEL:UpdatePlayerRow()
 	
 	if self.pl:Team() != TEAM_ALIVE then
 		self.statusLabel:SetText(team.GetName(self.pl:Team()))
-	elseif self.pl:Team() == TEAM_ALIVE then
-		self.statusLabel:SetText(team.GetName(self.pl:Team()))
 	else
-		self.statusLabel:SetText(team.GetName(self.pl:Team()))
+		self.statusLabel:SetText("")
+	end
+	
+	if (self.pl:Team() == TEAM_ALIVE || self.pl:Team() == TEAM_COMPLETED_MAP) then
+		self.healthLabel:SetText(self.pl:Health())
+	else
+		self.healthLabel:SetText("N/A")
 	end
 	
 	self.scoreLabel:SetText(self.pl:Frags())

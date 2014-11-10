@@ -86,5 +86,14 @@
 			"type"		"CheckBox"
 			"default"	"0"
 		}
+		
+		10
+		{
+			"name"		"hl2c_additions"
+			"text"		"Gameplay Additions(W.I.P)"
+			"help"		"In Multiplayer, should we add anything new to the gameplay?"
+			"type"		"CheckBox"
+			"default"	"0"
+		}
 	}
 }

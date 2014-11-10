@@ -1,5 +1,3 @@
-AddCSLuaFile()
-
 // Entity information
 ENT.Base = "base_anim"
 ENT.Type = "anim"
@@ -43,14 +41,21 @@ function ENT:StartTouch(ent)
 		for _, pl in pairs(player.GetAll()) do
 			if pl && pl:IsValid() && pl != ent && pl:Team() == TEAM_ALIVE then
 				if pl:GetVehicle() && pl:GetVehicle():IsValid() then
-					pl:GetVehicle():SetPos(self.ipsLocation)
-					pl:GetVehicle():SetAngles(ang)
+					// This just causes mayhem.
+					-- pl:GetVehicle():SetPos(self.ipsLocation)
+					-- pl:GetVehicle():SetAngles(ang)
+					pl:ExitVehicle() -- Make the player exit the vehicle and then teleport.
+					pl:SetPos(self.ipsLocation)
+					pl:SetAngles(ang)
 				else
 					pl:SetPos(self.ipsLocation)
 					pl:SetAngles(ang)
 				end
 			end
 		end
+		
+		// We're going to allow checkpoint respawning now. It gets out of hand when players are dead forever.
+		GAMEMODE:HL2CForceRespawn()
 		
 		table.remove(checkpointPositions, 1)
 		if checkpointPositions[1] then

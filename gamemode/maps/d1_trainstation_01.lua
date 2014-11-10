@@ -17,21 +17,3 @@ TRIGGER_CHECKPOINT = {
 	{Vector(-3607, -368, -17), Vector(-3273, -141, 86)},
 	{Vector(-3427, -118, -32), Vector(-3417, -13, 62)}
 }
-
-hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
-	local pvc_control = ents.Create("point_pvc_controller")
-	pvc_control:SetPos(Vector(150, -150, 150))
-	pvc_control:SetKeyValue("targetname", "hl2c_pvc_controller")
-	pvc_control:Spawn()
-	pvc_control:Activate()
-
-	local o_pvc = ents.FindByName("viewcontrol_final")
-	o_pvc[1]:Fire("addoutput", "targetname hl2c_viewcontrol_1")
-	
-	local scene1 = ents.FindByName("scene1_start")
-	scene1[1]:Fire("addoutput", "OnTrigger hl2c_pvc_controller,Enable1,,0.1,1")
-	
-	local scene4 = ents.FindByName("scene4_start")
-	scene4[1]:Fire("addoutput", "OnTrigger hl2c_viewcontrol_1,SetParent,tracktrain_finalview_move,20.0,1")
-	scene4[1]:Fire("addoutput", "OnTrigger hl2c_pvc_controller,Disable1,,25.6,1")
-end)

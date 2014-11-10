@@ -4,8 +4,8 @@ INFO_PLAYER_SPAWN = {Vector(-14200, 12494, 562), 0}
 
 NEXT_MAP = "d2_coast_10"
 
-if file.Exists("hl2c_data/hl2c_d2_coast_08.txt") then
-	file.Delete("hl2c_d2_coast_08.txt")
+if file.Exists("hl2c_data/hl2c_d2_coast_08.txt", "DATA") then
+	file.Delete("hl2c_data/hl2c_d2_coast_08.txt")
 end
 
 hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)

@@ -54,66 +54,6 @@ function GM:CreateTeams()
 	team.SetUp(TEAM_BOT_SPECTATOR, "BOT", Color(81, 124, 199, 255))
 end
 
-// Called immediately after starting the gamemode  
-function GM:Initialize()
-	if string.find(game.GetMap(), "ep1_") then
-		game.AddParticles("particles/ep1_fx.pcf")
-	end
-	
-	if string.find(game.GetMap(), "ep2_") then
-		game.AddParticles( "particles/antlion_gib_01.pcf" )
-		game.AddParticles( "particles/antlion_gib_02.pcf" )
-		game.AddParticles( "particles/advisor.pcf" )
-		game.AddParticles( "particles/Advisor_FX.pcf" )
-		game.AddParticles( "particles/aurora.pcf" )
-		game.AddParticles( "particles/aurora_sphere2.pcf" )
-		game.AddParticles( "particles/antlion_worker.pcf" )
-		game.AddParticles( "particles/buildingdamage.pcf" )
-		game.AddParticles( "particles/blob.pcf" )
-		game.AddParticles( "particles/bonfire.pcf" )
-		game.AddParticles( "particles/building_explosion.pcf" )
-		game.AddParticles( "particles/default.pcf" )
-		game.AddParticles( "particles/demo_paticle_light.pcf" )
-		game.AddParticles( "particles/devtest.pcf" )
-		game.AddParticles( "particles/door_explosion.pcf" )
-		game.AddParticles( "particles/dust_bombdrop.pcf" )
-		game.AddParticles( "particles/dust_rumble.pcf" )
-		game.AddParticles( "particles/explosion.pcf" )
-		game.AddParticles( "particles/electrical_fx.pcf" )
-		game.AddParticles( "particles/fire_ring.pcf" )
-		game.AddParticles( "particles/fireflow.pcf" )
-		game.AddParticles( "particles/flamethrowertest.pcf" )
-		game.AddParticles( "particles/grenade_fx.pcf" )
-		game.AddParticles( "particles/grub_blood.pcf" )
-		game.AddParticles( "particles/hunter_intro.pcf" )
-		game.AddParticles( "particles/hunter_projectile.pcf" )
-		game.AddParticles( "particles/hunter_shield_impact.pcf" )
-		game.AddParticles( "particles/hunter_flechette.pcf" )
-		game.AddParticles( "particles/choreo_dog_v_strider.pcf" )
-		game.AddParticles( "particles/choreo_launch.pcf" )
-		game.AddParticles( "particles/choreo_gman.pcf" )
-		game.AddParticles( "particles/choreo_extract.pcf" )
-		game.AddParticles( "particles/largefire.pcf" )
-		game.AddParticles( "particles/light_rays.pcf" )
-		game.AddParticles( "particles/magnusson_burner.pcf" )
-		game.AddParticles( "particles/rain.pcf" )
-		game.AddParticles( "particles/sand.pcf" )
-		game.AddParticles( "particles/skybox_smoke.pcf" )
-		game.AddParticles( "particles/stalactite.pcf" )
-		game.AddParticles( "particles/striderbuster.pcf" )
-		game.AddParticles( "particles/steampuff.pcf" )
-		game.AddParticles( "particles/test_grnalpha.pcf" )
-		game.AddParticles( "particles/test_noise.pcf" )
-		game.AddParticles( "particles/vehicle.pcf" )
-		game.AddParticles( "particles/vistasmokev1.pcf" )
-		game.AddParticles( "particles/Vortigaunt_FX.pcf" )
-		game.AddParticles( "particles/warpshield.pcf" )
-		game.AddParticles( "particles/water_leaks.pcf" )
-		game.AddParticles( "particles/waterfall.pcf" )
-		game.AddParticles( "particles/waterdrips.pcf" )
-		game.AddParticles( "particles/weapon_fx.pcf" )
-	end
-end
 
 // Called when map entities spawn
 function GM:EntityKeyValue(ent, key, value)
@@ -121,6 +61,7 @@ function GM:EntityKeyValue(ent, key, value)
 		ent.map = key
 	end
 end
+
 
 // Called when a gravity gun is attempting to punt something
 function GM:GravGunPunt(pl, ent) 
@@ -172,5 +113,82 @@ function GM:PlayerShouldTakeDamage(pl, attacker)
 		return false
 	else
 		return true
+	end
+end
+
+
+// Players shouldn't be mute when being hurt.
+function GM:PlayerHurt(pl, attacker, healthRemaining, damageTaken)
+	-- If the HL2C Additions is set to 0 OR the game is in singleplayer, just forgot about this function.
+	if GetConVarNumber("hl2c_additions") == 0 || game.SinglePlayer() then return end
+	-- Make sure the player is valid and alive.
+	if (pl:Team() != TEAM_ALIVE) then return end
+	if (!pl:Alive()) then return end
+	
+	local modelNameShared = player_manager.TranslatePlayerModel(pl:GetInfo("cl_playermodel"))
+	
+	-- MALE --
+	-- math.random it so players don't emit the pain sound all the time.
+	if ( math.random( 1, 6 ) <= 3 ) then
+		if modelNameShared && table.HasValue(PLAYER_MODELS_MALE, string.lower(modelNameShared)) then
+			pl:EmitSound(MALE_HURT_SOUNDS[math.random(1, #MALE_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+		end
+	end
+	-- MALE --
+	
+	-- FEMALE --
+	-- math.random it so players don't emit the pain sound all the time.
+	if ( math.random( 1, 6 ) <= 3 ) then
+		if modelNameShared && table.HasValue(PLAYER_MODELS_FEMALE, string.lower(modelNameShared)) then
+			pl:EmitSound(FEMALE_HURT_SOUNDS[math.random(1, #FEMALE_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+		end
+	end
+	-- FEMALE --
+	
+	// Do we really want these custom voice lines playing when playermodel restrictions are on? We're gonna have combine rebels if I don't do this.
+	if GetConVarNumber("hl2c_playermodel_restrictions") == 0 then
+	
+		-- COMBINE --
+		-- math.random it so players don't emit the pain sound all the time.
+		if ( math.random( 1, 6 ) <= 3 ) then
+			if modelNameShared && table.HasValue(PLAYER_MODELS_COMBINE, string.lower(modelNameShared)) then
+				pl:EmitSound(COMBINE_HURT_SOUNDS[math.random(1, #COMBINE_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+			end
+		end
+		-- COMBINE --
+		
+		-- ALYX --
+		-- Even though she isn't on the player_models list, she doesn't need to be mute.
+		-- math.random it so players don't emit the pain sound all the time.
+		if ( math.random( 1, 6 ) <= 3 ) then
+			if modelNameShared == "models/player/alyx.mdl" then
+				pl:EmitSound(ALYX_HURT_SOUNDS[math.random(1, #ALYX_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+			end
+		end
+		-- ALYX --
+		
+		-- BARNEY --
+		-- Even though barney is a custom playermodel from the list, he shouldn't be mute.
+		-- math.random it so players don't emit the pain sound all the time.
+		if ( math.random( 1, 6 ) <= 3 ) then
+			if modelNameShared == "models/player/barney.mdl" then
+				pl:EmitSound(BARNEY_HURT_SOUNDS[math.random(1, #BARNEY_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+			end
+		end
+		-- BARNEY --
+	end
+	
+	if GetConVarNumber("hl2c_playermodel_restrictions") == 0 then
+		if ( math.random( 1, 6 ) <= 3 ) then
+			if modelNameShared != "models/player/alyx.mdl" && modelNameShared != "models/player/barney.mdl" && (modelNameShared && !table.HasValue(PLAYER_MODELS_COMBINE, string.lower(modelNameShared))) && (modelNameShared && !table.HasValue(PLAYER_MODELS_FEMALE, string.lower(modelNameShared))) && (modelNameShared && !table.HasValue(PLAYER_MODELS_MALE, string.lower(modelNameShared))) then
+				pl:EmitSound(PLAYER_HURT_SOUNDS[math.random(1, #PLAYER_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+			end
+		end
+	else
+		if ( math.random( 1, 6 ) <= 3 ) then
+			if (modelNameShared && !table.HasValue(PLAYER_MODELS_FEMALE, string.lower(modelNameShared))) && (modelNameShared && !table.HasValue(PLAYER_MODELS_MALE, string.lower(modelNameShared))) then
+				pl:EmitSound(PLAYER_HURT_SOUNDS[math.random(1, #PLAYER_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+			end
+		end
 	end
 end

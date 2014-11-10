@@ -10,6 +10,8 @@ local PANEL = {}
 function PANEL:ApplySchemeSettings()
 	self.nameLabel:SetFont("DefaultSmall")
 	
+	self.healthLabel:SetFont("DefaultSmall")
+	
 	self.scoreLabel:SetFont("DefaultSmall")
 	
 	self.deathsLabel:SetFont("DefaultSmall")
@@ -24,6 +26,9 @@ function PANEL:Init()
 	
 	self.nameLabel = vgui.Create("DLabel", self)
 	self.nameLabel:SetText("Name")
+	
+	self.healthLabel = vgui.Create("DLabel", self)
+	self.healthLabel:SetText("Health")
 	
 	self.scoreLabel = vgui.Create("DLabel", self)
 	self.scoreLabel:SetText("Score")
@@ -47,6 +52,9 @@ end
 function PANEL:PerformLayout()
 	self.nameLabel:SizeToContents()
 	self.nameLabel:SetPos(65, 0)
+	
+	self.healthLabel:SizeToContents()
+	self.healthLabel:SetPos(self:GetWide() - self.healthLabel:GetWide() - 200, 0)
 	
 	self.scoreLabel:SizeToContents()
 	self.scoreLabel:SetPos(self:GetWide() - self.scoreLabel:GetWide() - 100, 0)
