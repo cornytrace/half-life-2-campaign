@@ -64,10 +64,10 @@ function PANEL:Paint()
 		surface.DrawRect(0, 0, self:GetWide(), self:GetTall())
 	end
 	
-	if self.pl:IsValid() && self.pl:GetFriendStatus() == "friend" then
-		surface.SetTexture(FRIEND_INDICATOR)
-		surface.DrawTexturedRect(0, 0, 64, 64) 
-	end
+	-- if self.pl:IsValid() && self.pl:GetFriendStatus() == "friend" then
+		-- surface.SetTexture(FRIEND_INDICATOR)
+		-- surface.DrawTexturedRect(0, 0, 64, 64) 
+	-- end
 end
 
 
@@ -83,7 +83,7 @@ function PANEL:PerformLayout()
 	self.statusLabel:SetPos(self:GetWide() - self.statusLabel:GetWide() - 300, 9)
 	
 	self.healthLabel:SizeToContents()
-	self.healthLabel:SetPos(self:GetWide() - self.healthLabel:GetWide() - 200, 9)
+	self.healthLabel:SetPos(self:GetWide() - self.healthLabel:GetWide() - 170, 9)
 	
 	self.scoreLabel:SizeToContents()
 	self.scoreLabel:SetPos(self:GetWide() - self.scoreLabel:GetWide() - 100, 9)

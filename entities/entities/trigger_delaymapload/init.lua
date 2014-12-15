@@ -34,6 +34,11 @@ function ENT:StartTouch(ent)
 		ent:SetMoveType(0)
 		ent:SetAvoidPlayers(false)
 		
+		// New level change system
+		if GetConVarNumber("hl2c_classic") == 0 then
+			GAMEMODE:NextMap()
+		end
+		
 		// Let everyone know that someone entered the loading section
 		PrintMessage(HUD_PRINTTALK, Format("%s completed the map (%s) [%i of %i].", ent:Nick(), string.ToMinutesSeconds(CurTime() - ent.startTime), team.NumPlayers(TEAM_COMPLETED_MAP), self.playersAlive))
 	end
@@ -45,6 +50,10 @@ function ENT:Think()
 	self.playersAlive = team.NumPlayers(TEAM_ALIVE) + team.NumPlayers(TEAM_COMPLETED_MAP)
 	
 	if self.playersAlive > 0 && team.NumPlayers(TEAM_COMPLETED_MAP) >= (self.playersAlive * (NEXT_MAP_PERCENT / 100)) then
-		GAMEMODE:NextMap()
+		if GetConVarNumber("hl2c_classic") >= 1 then
+			GAMEMODE:NextMap()
+		elseif GetConVarNumber("hl2c_classic") == 0 then
+			GAMEMODE:GrabAndSwitch()
+		end
 	end
 end

@@ -2,6 +2,13 @@ INFO_PLAYER_SPAWN = {Vector(4830, -12136, 300), 90}
 
 NEXT_MAP = "d2_prison_01"
 
+hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
+	if GetConVarNumber("hl2c_additions") >= 1 then
+		local music = ents.FindByName("antlion_fight_music")
+		music[1]:Fire("addoutput", "message music/hl2_song29_02.mp3")
+	end
+end)
+
 hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
 	pl:Give("weapon_crowbar")
 	pl:Give("weapon_pistol")

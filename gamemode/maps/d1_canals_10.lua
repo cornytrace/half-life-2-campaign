@@ -1,3 +1,5 @@
+INFO_PLAYER_SPAWN = {Vector(11904, -12312, -476), 90}
+
 ALLOWED_VEHICLE = "Airboat"
 
 NEXT_MAP = "d1_canals_11"

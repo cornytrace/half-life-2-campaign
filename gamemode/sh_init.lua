@@ -13,10 +13,6 @@ if !ConVarExists("hl2c_passenger_seats") then
 	CreateConVar("hl2c_passenger_seats", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_REPLICATED, FCVAR_ARCHIVE }, "Make HL2C spawn in unstable passenger seats in Vehicles.")
 end
 
-if !ConVarExists("hl2c_passenger_seats_weapons") then
-	CreateConVar("hl2c_passenger_seats_weapons", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_REPLICATED, FCVAR_ARCHIVE }, "Allow passengers to use weapons in the passenger seat?")
-end
-
 concommand.Add("hl2c_respawn_dead_players", function(pl) if pl:IsAdmin() && !game.SinglePlayer() then GAMEMODE:HL2CForceRespawn() elseif !pl:IsAdmin() then pl:PrintMessage(HUD_PRINTTALK, "Only admins can use this, sorry.") elseif game.SinglePlayer() then pl:PrintMessage(HUD_PRINTTALK, "You cannot use this command in Singleplayer.") end end)
 
 // Constants
@@ -131,7 +127,7 @@ function GM:PlayerHurt(pl, attacker, healthRemaining, damageTaken)
 	-- math.random it so players don't emit the pain sound all the time.
 	if ( math.random( 1, 6 ) <= 3 ) then
 		if modelNameShared && table.HasValue(PLAYER_MODELS_MALE, string.lower(modelNameShared)) then
-			pl:EmitSound(MALE_HURT_SOUNDS[math.random(1, #MALE_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+			pl:EmitSound(MALE_HURT_SOUNDS[math.random(1, #MALE_HURT_SOUNDS)], 75, pl.voicePitch, 1, CHAN_VOICE)
 		end
 	end
 	-- MALE --
@@ -140,7 +136,7 @@ function GM:PlayerHurt(pl, attacker, healthRemaining, damageTaken)
 	-- math.random it so players don't emit the pain sound all the time.
 	if ( math.random( 1, 6 ) <= 3 ) then
 		if modelNameShared && table.HasValue(PLAYER_MODELS_FEMALE, string.lower(modelNameShared)) then
-			pl:EmitSound(FEMALE_HURT_SOUNDS[math.random(1, #FEMALE_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+			pl:EmitSound(FEMALE_HURT_SOUNDS[math.random(1, #FEMALE_HURT_SOUNDS)], 75, pl.voicePitch, 1, CHAN_VOICE)
 		end
 	end
 	-- FEMALE --
@@ -152,7 +148,7 @@ function GM:PlayerHurt(pl, attacker, healthRemaining, damageTaken)
 		-- math.random it so players don't emit the pain sound all the time.
 		if ( math.random( 1, 6 ) <= 3 ) then
 			if modelNameShared && table.HasValue(PLAYER_MODELS_COMBINE, string.lower(modelNameShared)) then
-				pl:EmitSound(COMBINE_HURT_SOUNDS[math.random(1, #COMBINE_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+				pl:EmitSound(COMBINE_HURT_SOUNDS[math.random(1, #COMBINE_HURT_SOUNDS)], 75, pl.voicePitch, 1, CHAN_VOICE)
 			end
 		end
 		-- COMBINE --
@@ -162,7 +158,7 @@ function GM:PlayerHurt(pl, attacker, healthRemaining, damageTaken)
 		-- math.random it so players don't emit the pain sound all the time.
 		if ( math.random( 1, 6 ) <= 3 ) then
 			if modelNameShared == "models/player/alyx.mdl" then
-				pl:EmitSound(ALYX_HURT_SOUNDS[math.random(1, #ALYX_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+				pl:EmitSound(ALYX_HURT_SOUNDS[math.random(1, #ALYX_HURT_SOUNDS)], 75, pl.voicePitch, 1, CHAN_VOICE)
 			end
 		end
 		-- ALYX --
@@ -172,7 +168,7 @@ function GM:PlayerHurt(pl, attacker, healthRemaining, damageTaken)
 		-- math.random it so players don't emit the pain sound all the time.
 		if ( math.random( 1, 6 ) <= 3 ) then
 			if modelNameShared == "models/player/barney.mdl" then
-				pl:EmitSound(BARNEY_HURT_SOUNDS[math.random(1, #BARNEY_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+				pl:EmitSound(BARNEY_HURT_SOUNDS[math.random(1, #BARNEY_HURT_SOUNDS)], 75, pl.voicePitch, 1, CHAN_VOICE)
 			end
 		end
 		-- BARNEY --
@@ -181,13 +177,13 @@ function GM:PlayerHurt(pl, attacker, healthRemaining, damageTaken)
 	if GetConVarNumber("hl2c_playermodel_restrictions") == 0 then
 		if ( math.random( 1, 6 ) <= 3 ) then
 			if modelNameShared != "models/player/alyx.mdl" && modelNameShared != "models/player/barney.mdl" && (modelNameShared && !table.HasValue(PLAYER_MODELS_COMBINE, string.lower(modelNameShared))) && (modelNameShared && !table.HasValue(PLAYER_MODELS_FEMALE, string.lower(modelNameShared))) && (modelNameShared && !table.HasValue(PLAYER_MODELS_MALE, string.lower(modelNameShared))) then
-				pl:EmitSound(PLAYER_HURT_SOUNDS[math.random(1, #PLAYER_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+				pl:EmitSound(PLAYER_HURT_SOUNDS[math.random(1, #PLAYER_HURT_SOUNDS)], 75, pl.voicePitch, 1, CHAN_VOICE)
 			end
 		end
 	else
 		if ( math.random( 1, 6 ) <= 3 ) then
 			if (modelNameShared && !table.HasValue(PLAYER_MODELS_FEMALE, string.lower(modelNameShared))) && (modelNameShared && !table.HasValue(PLAYER_MODELS_MALE, string.lower(modelNameShared))) then
-				pl:EmitSound(PLAYER_HURT_SOUNDS[math.random(1, #PLAYER_HURT_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+				pl:EmitSound(PLAYER_HURT_SOUNDS[math.random(1, #PLAYER_HURT_SOUNDS)], 75, pl.voicePitch, 1, CHAN_VOICE)
 			end
 		end
 	end

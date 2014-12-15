@@ -19,8 +19,12 @@ FAILURE_SOUNDS = {}
 NEXT_MAP_PERCENT = 60
 
 
+// Seconds before the next map loads (Default: 60)
+NEXT_MAP_TIME = 60
+
+
 // Seconds before the next map loads (Default: 15)
-NEXT_MAP_TIME = 15
+NEXT_MAP_TIME_CLASSIC = 15
 
 
 // Points to give a player for killing an NPC (if non-one)
@@ -36,8 +40,10 @@ NPC_POINT_VALUES = {
 	["npc_strider"] = 3
 }
 
+
 // Seconds before the map is restarted (Default: 10)
 RESTART_MAP_TIME = 10
+
 
 // Models the player is restricted by
 PLAYER_MODELS = {
@@ -85,6 +91,7 @@ PLAYER_MODELS = {
 	"models/player/group03m/male_09.mdl"
 }
 
+
 // Determine between female or male
 PLAYER_MODELS_MALE = {
 	"models/player/group01/male_01.mdl",
@@ -116,6 +123,7 @@ PLAYER_MODELS_MALE = {
 	"models/player/group03m/male_09.mdl"
 }
 
+
 // Determine between female or male
 PLAYER_MODELS_FEMALE = {
 	"models/player/group01/female_01.mdl",
@@ -135,6 +143,7 @@ PLAYER_MODELS_FEMALE = {
 	"models/player/group03m/female_06.mdl"
 }
 
+
 // Combine Playermodels are also given a hurt sound so they're not left out.
 PLAYER_MODELS_COMBINE = {
 	"models/player/combine_soldier.mdl",
@@ -145,8 +154,11 @@ PLAYER_MODELS_COMBINE = {
 	"models/player/police.mdl"
 }
 
+
 // Male hurt sounds
 MALE_HURT_SOUNDS = {
+	"vo/npc/male01/hitingut01.wav",
+	"vo/npc/male01/hitingut02.wav",
 	"vo/npc/male01/imhurt01.wav",
 	"vo/npc/male01/imhurt02.wav",
 	"vo/npc/male01/myarm01.wav",
@@ -166,6 +178,7 @@ MALE_HURT_SOUNDS = {
 	"vo/npc/male01/pain08.wav",
 	"vo/npc/male01/pain09.wav"
 }
+
 
 // Male sounds called when someone dies
 MALE_HEISDEAD_SOUNDS = {
@@ -193,8 +206,57 @@ MALE_HEISDEAD_SOUNDS = {
 	"vo/npc/male01/gordead_ques16.wav"
 }
 
+
+// Male taunt sounds when an NPC is killed.
+MALE_TAUNT_SOUNDS = {
+	"vo/npc/male01/fantastic01.wav",
+	"vo/npc/male01/fantastic02.wav",
+	"vo/npc/male01/gotone01.wav",
+	"vo/npc/male01/gotone02.wav",
+	"vo/npc/male01/likethat.wav",
+	"vo/npc/male01/oneforme.wav"
+}
+
+
+// Male random voice lines.
+MALE_VOICELINE_SOUNDS = {
+	"vo/npc/male01/question01.wav",
+	"vo/npc/male01/question02.wav",
+	"vo/npc/male01/question03.wav",
+	"vo/npc/male01/question04.wav",
+	"vo/npc/male01/question05.wav",
+	"vo/npc/male01/question06.wav",
+	"vo/npc/male01/question07.wav",
+	"vo/npc/male01/question08.wav",
+	"vo/npc/male01/question09.wav",
+	"vo/npc/male01/question10.wav",
+	"vo/npc/male01/question11.wav",
+	"vo/npc/male01/question12.wav",
+	"vo/npc/male01/question13.wav",
+	"vo/npc/male01/question14.wav",
+	"vo/npc/male01/question15.wav",
+	"vo/npc/male01/question16.wav",
+	"vo/npc/male01/question17.wav",
+	"vo/npc/male01/question18.wav",
+	"vo/npc/male01/question19.wav",
+	"vo/npc/male01/question20.wav",
+	"vo/npc/male01/question21.wav",
+	"vo/npc/male01/question22.wav",
+	"vo/npc/male01/question23.wav",
+	"vo/npc/male01/question25.wav",
+	"vo/npc/male01/question26.wav",
+	"vo/npc/male01/question27.wav",
+	"vo/npc/male01/question28.wav",
+	"vo/npc/male01/question29.wav",
+	"vo/npc/male01/question30.wav",
+	"vo/npc/male01/question31.wav"
+}
+
+
 // Female hurt sounds
 FEMALE_HURT_SOUNDS = {
+	"vo/npc/female01/hitingut01.wav",
+	"vo/npc/female01/hitingut02.wav",
 	"vo/npc/female01/imhurt01.wav",
 	"vo/npc/female01/imhurt02.wav",
 	"vo/npc/female01/myarm01.wav",
@@ -214,6 +276,7 @@ FEMALE_HURT_SOUNDS = {
 	"vo/npc/female01/pain08.wav",
 	"vo/npc/female01/pain09.wav"
 }
+
 
 // Female sounds called when someone dies
 FEMALE_HEISDEAD_SOUNDS = {
@@ -241,6 +304,51 @@ FEMALE_HEISDEAD_SOUNDS = {
 	"vo/npc/female01/gordead_ques16.wav"
 }
 
+
+// Female taunt sounds when an NPC is killed.
+FEMALE_TAUNT_SOUNDS = {
+	"vo/npc/female01/fantastic01.wav",
+	"vo/npc/female01/fantastic02.wav",
+	"vo/npc/female01/gotone01.wav",
+	"vo/npc/female01/gotone02.wav",
+	"vo/npc/female01/likethat.wav"
+}
+
+
+// Female random voice lines.
+FEMALE_VOICELINE_SOUNDS = {
+	"vo/npc/female01/question01.wav",
+	"vo/npc/female01/question02.wav",
+	"vo/npc/female01/question03.wav",
+	"vo/npc/female01/question04.wav",
+	"vo/npc/female01/question05.wav",
+	"vo/npc/female01/question06.wav",
+	"vo/npc/female01/question07.wav",
+	"vo/npc/female01/question08.wav",
+	"vo/npc/female01/question09.wav",
+	"vo/npc/female01/question10.wav",
+	"vo/npc/female01/question11.wav",
+	"vo/npc/female01/question12.wav",
+	"vo/npc/female01/question13.wav",
+	"vo/npc/female01/question14.wav",
+	"vo/npc/female01/question15.wav",
+	"vo/npc/female01/question16.wav",
+	"vo/npc/female01/question17.wav",
+	"vo/npc/female01/question18.wav",
+	"vo/npc/female01/question19.wav",
+	"vo/npc/female01/question20.wav",
+	"vo/npc/female01/question21.wav",
+	"vo/npc/female01/question22.wav",
+	"vo/npc/female01/question23.wav",
+	"vo/npc/female01/question25.wav",
+	"vo/npc/female01/question26.wav",
+	"vo/npc/female01/question27.wav",
+	"vo/npc/female01/question28.wav",
+	"vo/npc/female01/question29.wav",
+	"vo/npc/female01/question30.wav"
+}
+
+
 // Combine hurt sounds
 COMBINE_HURT_SOUNDS = {
 	"npc/combine_soldier/pain1.wav",
@@ -248,14 +356,16 @@ COMBINE_HURT_SOUNDS = {
 	"npc/combine_soldier/pain3.wav"
 }
 
+
 // Female sounds called when someone dies
-COMBINE_HEISDEAD_SOUNDS = {
+COMBINE_VOICELINE_SOUNDS = {
 	"npc/combine_soldier/vo/contactconfim.wav",
 	"npc/combine_soldier/vo/contactconfirmprosecuting.wav",
 	"npc/combine_soldier/vo/overwatchrequestreinforcement.wav",
 	"npc/overwatch/radiovoice/allunitsapplyforwardpressure.wav",
 	"npc/overwatch/radiovoice/assault243.wav"
 }
+
 
 // Alyx hurt sounds
 ALYX_HURT_SOUNDS = {
@@ -268,6 +378,7 @@ ALYX_HURT_SOUNDS = {
 	"vo/npc/alyx/uggh01.wav",
 	"vo/npc/alyx/uggh02.wav"
 }
+
 
 // Barney hurt sounds
 BARNEY_HURT_SOUNDS = {
@@ -286,12 +397,25 @@ BARNEY_HURT_SOUNDS = {
 	"vo/npc/barney/ba_wounded03.wav"
 }
 
+
+// CSTRIKE Death sounds
+CSTRIKE_DEATH_SOUNDS = {
+	"bot/pain10.wav",
+	"bot/pain2.wav",
+	"bot/pain4.wav",
+	"bot/pain5.wav",
+	"bot/pain8.wav",
+	"bot/pain9.wav"
+}
+
+
 // Custom Player hurt sounds
 PLAYER_HURT_SOUNDS = {
 	"player/pl_pain5.wav",
 	"player/pl_pain6.wav",
 	"player/pl_pain7.wav"
 }
+
 
 // If everyone beats the level, one of these will be played
 // Leave blank to disable
@@ -301,10 +425,16 @@ SUCCESS_SOUNDS = {}
 // Number of seconds before a player is vulnerable after they spawn (Default: 10)
 VULNERABLE_TIME = 0
 
-// Names for the dummy bots that can be added via "bot" or "bot_add"
-// Just visually change the nicknames for the dummy bots so they're no longer shown to be Bot*
-// Includes normal names, Steam Usernames, Youtube names and extras
-// Find what names you know
+
+// Beta tester list
+BETA_TESTERS = {
+	"STEAM_0:0:49332102",
+	"STEAM_0:0:16219541",
+	"STEAM_0:1:51097609"
+}
+
+
+// OBSOLETE. The list is kept so people can look at what the bots used to be named.
 BOT_NAMES = {
 	"Rodrick",
 	"James",
@@ -326,6 +456,7 @@ BOT_NAMES = {
 	"Drew",
 	"Tony",
 	"0102uʍouʞunɐp",
+	"DΛЦПKПӨЩПMΛП2010",
 	"Maestro Fénix",
 	"Vanoss",
 	"Felix",
@@ -333,7 +464,7 @@ BOT_NAMES = {
 	"Adam",
 	"[YaS] Neico",
 	"Shana",
-	"TESLA-X4",
+	"「ƬΣSLΛ-X4」",
 	"Rubat",
 	"Nafrayu",
 	"Venturian",
@@ -400,5 +531,7 @@ BOT_NAMES = {
 	"Shadow",
 	"Hean",
 	"Sass Patrol",
-	"Barley"
+	"Barley",
+	"Wolvindra-Vinzuerio",
+	"GbrosMC"
 }

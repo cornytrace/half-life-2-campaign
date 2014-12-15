@@ -55,13 +55,23 @@ function ENT:StartTouch(ent)
 		end
 		
 		// We're going to allow checkpoint respawning now. It gets out of hand when players are dead forever.
-		GAMEMODE:HL2CForceRespawn()
+		if GetConVarNumber("hl2c_classic") == 0 then
+			GAMEMODE:HL2CForceRespawn()
+		end
 		
 		table.remove(checkpointPositions, 1)
 		if checkpointPositions[1] then
-			umsg.Start("SetCheckpointPosition", RecipientFilter():AddAllPlayers())
-			umsg.Vector(checkpointPositions[1])
-			umsg.End()
+			if GetConVarNumber("hl2c_use_old_umsg") >= 1 then
+				umsg.Start("SetCheckpointPosition", RecipientFilter():AddAllPlayers())
+				umsg.Vector(checkpointPositions[1])
+				umsg.End()
+			elseif GetConVarNumber("hl2c_use_old_umsg") == 0 then
+				for _, pl in pairs(player.GetAll()) do
+				net.Start("SetCheckpointPosition")
+					net.WriteVector(checkpointPositions[1])
+				net.Send(pl)
+			end
+		end
 		end
 		
 		self:Remove()

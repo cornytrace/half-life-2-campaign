@@ -18,13 +18,32 @@ hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
 end)
 
 hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
-	aft = ents.Create("ai_goal_follow")
-	aft:SetPos(Vector(1065, 353, -631))
-	aft:SetKeyValue("targetname", "hl2c_barney_temp_follow")
-	aft:SetKeyValue("actor", "barney")
-	aft:SetKeyValue("goal", "!player")
-	aft:Spawn()
+	if !game.SinglePlayer() then
 
-	local healed = ents.FindByName("barney_healed_relay")
-	healed[1]:Fire("addoutput", "OnTrigger hl2c_barney_temp_follow,Activate,,0,1", "3.0")
+		local aisc_look = ents.FindByName("can_see_barney_aisc")
+		aisc_look[1]:Remove()
+		
+		local ai_lead = ents.FindByName("barney_lead")
+		ai_lead[1]:Remove()
+		
+		local barney_end_seq = ents.FindByName("barney_end_seq")
+		barney_end_seq[1]:Fire("addoutput", "m_flRadius 0")
+		
+		local aisc_look_r = ents.Create("logic_relay")
+		aisc_look_r:SetPos(Vector(7386, 6423, 393))
+		aisc_look_r:SetKeyValue("targetname", "can_see_barney_aisc_relay")
+		aisc_look_r:Spawn()
+		aisc_look_r:Activate()
+		aisc_look_r:Fire("addoutput", "OnTrigger !self,Disable,,0,-1", "2.0")
+		aisc_look_r:Fire("addoutput", "OnTrigger barney_pinned_down_vcd_trigger,Kill,,0,-1", "2.0")
+		aisc_look_r:Fire("addoutput", "OnTrigger lcs_barney_uphere,Kill,,0,-1", "2.0")
+		aisc_look_r:Fire("addoutput", "OnTrigger lcs_barney_medic,Start,,0,-1", "2.0")
+
+		local lcs_barney_uphere = ents.FindByName("lcs_barney_uphere")
+		lcs_barney_uphere[1]:Fire("addoutput", "OnCompletion can_see_barney_aisc_relay,Trigger,,2,1")
+
+		local healed = ents.FindByName("barney_healed_relay")
+		healed[1]:Fire("addoutput", "OnTrigger barney_end_seq,BeginSequence,,1,1", "3.0")
+	
+	end
 end)

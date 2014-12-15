@@ -26,19 +26,42 @@ hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
 end)
 
 hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
-	aft = ents.Create("ai_goal_follow")
-	aft:SetPos(Vector(1065, 353, -631))
-	aft:SetKeyValue("targetname", "hl2c_barney_temp_follow")
-	aft:SetKeyValue("actor", "barney")
-	aft:SetKeyValue("goal", "!player")
-	aft:Spawn()
+	local barney_npc = ents.Create("npc_barney")
+	barney_npc:SetPos(Vector(2696, -1944, 293))
+	barney_npc:SetKeyValue("additionalequipment", "weapon_ar2")
+	barney_npc:SetKeyValue("targetname", "barney")
+	barney_npc:SetKeyValue("spawnflags", "0")
+	barney_npc:SetKeyValue("angles", "0 90 0")
+	barney_npc:Spawn()
+	barney_npc:Activate()
 	
-	local timer = ents.Create( "logic_timer" )
+	if !game.SinglePlayer() then
+	
+	local timer = ents.Create("logic_timer")
 	timer:SetPos(Vector(1066, 353, -631))
-	timer:SetKeyValue( "RefireTime", "5" )
-	timer:SetKeyValue( "targetname", "hl2c_timer_follow" )
-	timer:SetKeyValue( "StartDisabled", "0" )
-	timer:Fire("addoutput", "OnTimer hl2c_barney_temp_follow,Deactivate,,0.0,-1", "1")
-	timer:Fire("addoutput", "OnTimer hl2c_barney_temp_follow,Activate,,0.10,-1", "1")
+	timer:SetKeyValue("RefireTime", "5")
+	timer:SetKeyValue("targetname", "hl2c_timer_follow")
+	timer:SetKeyValue("StartDisabled", "0")
+	timer:Fire("addoutput", "OnTimer barney_follow,Deactivate,,0,-1", "1")
+	timer:Fire("addoutput", "OnTimer barney_follow,Activate,,0.1,-1", "1")
 	timer:Spawn()
+	
+	local aisc_pod = ents.FindByName("citizen_pod_conditions")
+	aisc_pod[1]:Remove()
+	
+	local detected = ents.FindByName("s_room_detected_relay")
+	detected[1]:Fire("addoutput", "OnTrigger s_room_turret_*,Disable,,7,1")
+	detected[1]:Fire("addoutput", "OnTrigger s_room_doors,Open,,7,1")
+	
+	local lcs_lead_exit = ents.FindByName("barney_lead_exit_lcs2")
+	lcs_lead_exit[1]:Fire("addoutput", "OnCompletion hl2c_timer_follow,Disable,,0,-1")
+	lcs_lead_exit[1]:Fire("addoutput", "OnCompletion barney_follow,Deactivate,,0.1,-1")
+	
+	local lcs_h4x = ents.FindByName("lcs_barney_h4x")
+	lcs_h4x[1]:Fire("addoutput", "OnCompletion hl2c_timer_follow,Enable,,0.5,-1")
+	
+	local lcs_h4x_pows = ents.FindByName("lcs_barney_h4x_pows")
+	lcs_h4x_pows[1]:Fire("addoutput", "OnCompletion hl2c_timer_follow,Enable,,0.2,-1")
+	
+	end
 end)

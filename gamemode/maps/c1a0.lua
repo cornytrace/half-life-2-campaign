@@ -1,0 +1,5 @@
+INFO_PLAYER_SPAWN = {Vector(456, 318, -191), 180}
+
+PLAYER_IS_CITIZEN = true
+
+NEXT_MAP = "c1a0d"

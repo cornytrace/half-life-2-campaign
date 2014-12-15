@@ -12,3 +12,7 @@ hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
 	local func_brushes = ents.FindByName("citadel_brush_elevcage1_2")
 	func_brushes[1]:Remove()
 end)
+
+hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
+	pl:Give("weapon_physcannon")
+end)

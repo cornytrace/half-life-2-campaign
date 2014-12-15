@@ -36,3 +36,7 @@ hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
 	playerpod_timer:Fire("addoutput", "OnTimer playerpod7_train,Resume,,0.10,-1", "25")
 	playerpod_timer:Spawn()
 end)
+
+hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
+	pl:Give("weapon_physcannon")
+end)

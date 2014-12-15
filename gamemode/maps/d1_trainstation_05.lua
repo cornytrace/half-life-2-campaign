@@ -21,6 +21,9 @@ TRIGGER_CHECKPOINT = {
 hook.Add("EntityRemoved", "hl2cEntityRemoved", function(ent)
 	if ent:GetClass() == "item_suit" then
 		PLAYER_IS_CITIZEN = false
+		for _, pl in pairs(player.GetAll()) do
+			GAMEMODE:SetPlayerSpeed(pl, 190, 320)
+		end
 	end
 end)
 

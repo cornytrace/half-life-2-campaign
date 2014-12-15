@@ -95,5 +95,41 @@
 			"type"		"CheckBox"
 			"default"	"0"
 		}
+		
+		11
+		{
+			"name"		"hl2c_classic"
+			"text"		"Classic Mode -= 1.2.6 =-"
+			"help"		"Override the gamemode to act closely to the original HL2C 1.2.6."
+			"type"		"CheckBox"
+			"default"	"0"
+		}
+		
+		12
+		{
+			"name"		"hl2c_use_old_umsg"
+			"text"		"Use old Usermessages"
+			"help"		"Use the old networking method."
+			"type"		"CheckBox"
+			"default"	"1"
+		}
+		
+		13
+		{
+			"name"		"hl2c_shop_allowed"
+			"text"		"Enable hl2c_buy_"
+			"help"		"The shop system. Disabled by default."
+			"type"		"CheckBox"
+			"default"	"0"
+		}
+		
+		14
+		{
+			"name"		"hl2c_ammo_limits"
+			"text"		"Ammo Limiting"
+			"help"		"Ammo is limited to hl2c_ammo_***_max cvars."
+			"type"		"CheckBox"
+			"default"	"1"
+		}
 	}
 }

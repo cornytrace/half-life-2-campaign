@@ -4,6 +4,23 @@ NEXT_MAP_PERCENT = 1
 
 TRIGGER_DELAYMAPLOAD = {Vector(3781, 13186, 3900), Vector(3984, 13590, 4000)}
 
+POD_SETPOS = true
+
+hook.Add("EntityRemoved", "hl2cEntityRemoved", function(ent)
+	if ent:GetClass() == "point_viewcontrol" then
+		POD_SETPOS = false
+	end
+end)
+
+hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
+	local change = ents.Create("point_changelevel")
+	change:SetPos(Vector(3840, 13366, 4266))
+	change:SetKeyValue("targetname", "hl2c_changelevel")
+	change:Spawn()
+	change:Activate()
+	change:Fire("Changelevel")
+end)
+
 hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)
 	pl:Give("weapon_crowbar")
 	pl:Give("weapon_pistol")

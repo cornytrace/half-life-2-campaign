@@ -15,6 +15,9 @@ hook.Add("PlayerInitialSpawn", "hl2cPlayerInitialSpawn", function(pl)
 	for _, ent in pairs(ents.FindByClass("prop_vehicle_airboat")) do
 		ent:Remove()
 	end
+	
+	local fglobal = ents.FindByName("global_friendly_encounter")
+	fglobal[1]:Remove()
 end)
 
 hook.Add("PlayerSpawn", "hl2cPlayerSpawn", function(pl)

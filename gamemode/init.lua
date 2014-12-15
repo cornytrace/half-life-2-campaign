@@ -1,8 +1,8 @@
 // Send the required resources to the client
-resource.AddFile("materials/hl2c_nav_marker.vmt")
-resource.AddFile("materials/hl2c_nav_marker.vtf")
-resource.AddFile("materials/hl2c_nav_pointer.vmt")
-resource.AddFile("materials/hl2c_nav_pointer.vtf")
+resource.AddFile("materials/hl2c/hl2c_nav_marker.vmt")
+resource.AddFile("materials/hl2c/hl2c_nav_marker.vtf")
+resource.AddFile("materials/hl2c/hl2c_nav_pointer.vmt")
+resource.AddFile("materials/hl2c/hl2c_nav_pointer.vtf")
 
 
 // Send the required lua files to the client
@@ -10,6 +10,7 @@ AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("cl_scoreboard.lua")
 AddCSLuaFile("cl_scoreboard_playerlist.lua")
 AddCSLuaFile("cl_scoreboard_playerrow.lua")
+AddCSLuaFile("cl_targetid.lua")
 AddCSLuaFile("sh_config.lua")
 AddCSLuaFile("sh_init.lua")
 AddCSLuaFile("sh_player.lua")
@@ -77,10 +78,101 @@ if !ConVarExists("hl2c_old_nextmap_timer") then
 	CreateConVar("hl2c_old_nextmap_timer", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Only usable in Multiplayer. Use old NextMap timer?")
 end
 
+// Try bring back the classic HL2C 1.2.6 features.
+if !ConVarExists("hl2c_classic") then
+	CreateConVar("hl2c_classic", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Override to make the gamemode act closely to HL2C 1.2.6.")
+end
+
+// Shop is optional
+if !ConVarExists("hl2c_shop_allowed") then
+	CreateConVar("hl2c_shop_allowed", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Allow the Shop?")
+end
+
+// Spawnmenu
+if !ConVarExists("hl2c_spawnmenu") then
+	CreateConVar("hl2c_spawnmenu", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "DOES NOTHING RIGHT NOW.")
+end
+
+// Used temporary until spawn menu becomes fully avaliable.
+if !ConVarExists("hl2c_custom_weapon_1") then
+	CreateConVar("hl2c_custom_weapon_1", "", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Temporary feature.")
+	CreateConVar("hl2c_custom_weapon_2", "", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Temporary feature.")
+	CreateConVar("hl2c_custom_weapon_3", "", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Temporary feature.")
+end
+
+// Ammo limiting.
+if !ConVarExists("hl2c_ammo_limits") then
+	CreateConVar("hl2c_ammo_limits", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Limit your ammo?")
+end
+
+// These never appeared when they were merged with hl2c_ammo_limits so just place them seperately.
+if !ConVarExists("hl2c_ammo_pistol_max") then
+	CreateConVar("hl2c_ammo_pistol_max", "150", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Max amount of ammo for pistol.")
+	CreateConVar("hl2c_ammo_357_max", "12", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Max amount of ammo for 357.")
+	CreateConVar("hl2c_ammo_smg1_max", "225", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Max amount of ammo for smg1.")
+	CreateConVar("hl2c_ammo_smg1_grenade_max", "3", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Max amount of ammo for smg1 alt-fire.")
+	CreateConVar("hl2c_ammo_ar2_max", "60", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Max amount of ammo for ar2.")
+	CreateConVar("hl2c_ammo_ar2altfire_max", "3", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Max amount of ammo for ar2 alt-fire.")
+	CreateConVar("hl2c_ammo_buckshot_max", "30", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Max amount of ammo for shotgun.")
+	CreateConVar("hl2c_ammo_xbowbolt_max", "10", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Max amount of ammo for crossbow.")
+	CreateConVar("hl2c_ammo_rpg_round_max", "3", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Max amount of ammo for rpg.")
+	CreateConVar("hl2c_ammo_slam_max", "5", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Max amount of ammo for slam.")
+end
+
+// Usermessages vs. Net Library
+if !ConVarExists("hl2c_use_old_umsg") then
+	CreateConVar("hl2c_use_old_umsg", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Use UserMessages instead of NET LIBRARY.")
+end
+
 // Precache all the player models ahead of time
 for _, playerModel in pairs(PLAYER_MODELS) do
 	util.PrecacheModel(playerModel)
 end
+
+
+// NET LIBRARY - Add Network Strings
+util.AddNetworkString("PlayerJoinMessage")
+util.AddNetworkString("SetCheckpointPosition")
+util.AddNetworkString("PlayerInitialSpawn")
+util.AddNetworkString("ShowHelp")
+util.AddNetworkString("ShowTeam")
+util.AddNetworkString("UpdateEnergy")
+util.AddNetworkString("DrowningEffect")
+util.AddNetworkString("ClassicMode")
+util.AddNetworkString("AbilityBought")
+util.AddNetworkString("PlayerCalledVoiceLine")
+util.AddNetworkString("SpawnMenuEnabled")
+util.AddNetworkString("PlayerCalledWarning")
+util.AddNetworkString("PlayerWarningPositions")
+util.AddNetworkString("PlayerWarningPositionsDisable")
+
+
+// Some hooks
+gameevent.Listen("player_connect")
+hook.Add("player_connect", "PlayerConnectedAnnouncement", function(data)
+	for _, pl in pairs(player.GetAll()) do
+		if GetConVarNumber("hl2c_use_old_umsg") >= 1 then
+			umsg.Start("PlayerJoinMessage", pl)
+			umsg.String(data.name)
+			umsg.End()
+		elseif GetConVarNumber("hl2c_use_old_umsg") == 0 then
+			net.Start("PlayerJoinMessage")
+				net.WriteString(data.name)
+			net.Send(pl)
+		end
+	end
+end)
+
+
+// This is called when the player calls a question line
+net.Receive("PlayerCalledVoiceLine", function(len, pl)
+	PlayerVoiceLine(pl)
+end)
+
+// This is called when the player calls a warning
+net.Receive("PlayerCalledWarning", function(len, pl)
+	PlayerWarning(pl)
+end)
 
 
 // Called when the player attempts to suicide
@@ -91,6 +183,13 @@ function GM:CanPlayerSuicide(pl)
 	elseif pl:Team() == TEAM_DEAD then
 		pl:ChatPrint("This may come as a suprise, but you are already dead.")
 		return false
+	end
+	
+	if GetConVarNumber("hl2c_classic") == 0 then
+		if PLAYER_IS_CITIZEN == true then
+			pl:ChatPrint("You can only suicide when the HEV Suit is on.")
+			return false
+		end
 	end
 	
 	return true
@@ -117,6 +216,7 @@ function GM:CreateTDML(min, max)
 	tdml:Spawn()
 end
 
+
 // Creates a brush playerfreeze
 function GM:CreatePF(min, max)
 	pfPos = max - ((max - min) / 2)
@@ -127,6 +227,7 @@ function GM:CreatePF(min, max)
 	pf.max = max
 	pf:Spawn()
 end
+
 
 // Creates a brush playerclip
 // BROUGHT BACK FROM THE DEAD
@@ -141,35 +242,70 @@ function GM:CreatePC(min, max)
 end
 
 
+// Creates a trigger vehiclespawn
+function GM:CreateTVS(min, max)
+	tvsPos = max - ((max - min) / 2)
+	
+	local tvs = ents.Create("trigger_vehiclespawn")
+	tvs:SetPos(tvsPos)
+	tvs.min = min
+	tvs.max = max
+	tvs:Spawn()
+end
+
+
 // Called when the player dies
 function GM:DoPlayerDeath(pl, attacker, dmgInfo)
 	pl.deathPos = pl:EyePos()
+	pl.deathPosBeta = pl:GetPos()
+	
+	-- Stop abilities
+	if pl.abilityInvis then
+		StopInvisibility(pl)
+	end
+
+	if pl.abilityInvinc then
+		StopInvincibility(pl)
+	end
+
+	if pl.abilityScaler then
+		StopScaler(pl)
+	end
+	
+	if pl.abilitySuitCharge then
+		StopSuitRecharge(pl)
+	end
 	
 	-- A timer to when every player responds to someone dying.
 	if GetConVarNumber("hl2c_additions") >= 1 && !game.SinglePlayer() then
-		timer.Simple(math.random(1, 3), function() GAMEMODE:HeIsDead() end)
+		timer.Simple(math.random(1, 3), function() HeIsDead() end)
 	end
 	
-	if GetConVarNumber("hl2c_allow_respawn") == 0 || game.SinglePlayer() then
-		// Add to deadPlayers table to prevent respawning on re-connect
-		if !table.HasValue(deadPlayers, pl:UniqueID()) then
-			table.insert(deadPlayers, pl:UniqueID())
+	if HL1_CAMPAIGN == false then
+		if GetConVarNumber("hl2c_allow_respawn") == 0 || game.SinglePlayer() then
+			// Add to deadPlayers table to prevent respawning on re-connect
+			if !table.HasValue(deadPlayers, pl:UniqueID()) then
+				table.insert(deadPlayers, pl:UniqueID())
+			end
 		end
 	end
 	
 	pl:RemoveVehicle()
 	pl:Flashlight(false)
 	pl:CreateRagdoll()
-	if GetConVarNumber("hl2c_allow_respawn") == 0 || game.SinglePlayer() then
-		pl:SetTeam(TEAM_DEAD)
+	if HL1_CAMPAIGN == false then
+		if GetConVarNumber("hl2c_allow_respawn") == 0 || game.SinglePlayer() then
+			pl:SetTeam(TEAM_DEAD)
+		end
 	end
 	pl:AddDeaths(1)
 end
 
 
 // If HL2C Additions is enabled and the game is not in singleplayer, let every player alive & valid say something.
-function GM:HeIsDead()
+function HeIsDead()
 	for _, pl in pairs(player.GetAll()) do
+		if (game.SinglePlayer()) then return end
 		if (pl:Team() != TEAM_ALIVE) then return end
 		if (!pl:Alive()) then return end
 
@@ -177,38 +313,155 @@ function GM:HeIsDead()
 		
 		-- MALE --
 		if modelNameGender && table.HasValue(PLAYER_MODELS_MALE, string.lower(modelNameGender)) then
-			pl:EmitSound(MALE_HEISDEAD_SOUNDS[math.random(1, #MALE_HEISDEAD_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+			pl:EmitSound(MALE_HEISDEAD_SOUNDS[math.random(1, #MALE_HEISDEAD_SOUNDS)], 75, pl.voicePitch, 1, CHAN_VOICE)
 		end
 		-- MALE --
 		
 		-- FEMALE --
 		if modelNameGender && table.HasValue(PLAYER_MODELS_FEMALE, string.lower(modelNameGender)) then
-			pl:EmitSound(FEMALE_HEISDEAD_SOUNDS[math.random(1, #FEMALE_HEISDEAD_SOUNDS)], 75, 100, 1, CHAN_VOICE)
+			pl:EmitSound(FEMALE_HEISDEAD_SOUNDS[math.random(1, #FEMALE_HEISDEAD_SOUNDS)], 75, pl.voicePitch, 1, CHAN_VOICE)
 		end
 		-- FEMALE --
 		
 		// Do we really want these custom voice lines playing when playermodel restrictions are on? We're gonna have combine rebels if I don't do this.
 		if GetConVarNumber("hl2c_playermodel_restrictions") == 0 then
-		
-			-- COMBINE --
-			if modelNameGender && table.HasValue(PLAYER_MODELS_COMBINE, string.lower(modelNameGender)) then
-				pl:EmitSound(COMBINE_HEISDEAD_SOUNDS[math.random(1, #COMBINE_HEISDEAD_SOUNDS)], 75, 100, 1, CHAN_VOICE)
-			end
-			-- COMBINE --
 			
 			-- ALYX --
 			if modelNameGender == "models/player/alyx.mdl" then
-				pl:EmitSound("vo/npc/alyx/ohgod01.wav", 75, 100, 1, CHAN_VOICE)
+				pl:EmitSound("vo/npc/alyx/ohgod01.wav", 75, pl.voicePitch, 1, CHAN_VOICE)
 			end
 			-- ALYX --
 			
 			-- BARNEY --
 			if modelNameGender == "models/player/barney.mdl" then
-				pl:EmitSound("vo/npc/barney/ba_ohshit03.wav", 75, 100, 1, CHAN_VOICE)
+				pl:EmitSound("vo/npc/barney/ba_ohshit03.wav", 75, pl.voicePitch, 1, CHAN_VOICE)
 			end
 			-- BARNEY --
 		
 		end
+	end
+end
+
+
+// Heads up!
+function PlayerWarning(pl)
+	if (GetConVarNumber("hl2c_additions") == 0) then return end
+	if (game.SinglePlayer()) then return end
+	if (pl:Team() != TEAM_ALIVE) then return end
+	if (!pl:Alive()) then return end
+	if (warningPositions[1]) then return end
+
+	local modelNameGender = player_manager.TranslatePlayerModel(pl:GetInfo("cl_playermodel"))
+	
+	-- MALE --
+	if modelNameGender && table.HasValue(PLAYER_MODELS_MALE, string.lower(modelNameGender)) then
+		pl:EmitSound("vo/npc/male01/headsup0"..math.random(1, 2)..".wav", 75, pl.voicePitch, 1, CHAN_VOICE)
+	end
+	-- MALE --
+		
+	-- FEMALE --
+	if modelNameGender && table.HasValue(PLAYER_MODELS_FEMALE, string.lower(modelNameGender)) then
+		pl:EmitSound("vo/npc/female01/headsup0"..math.random(1, 2)..".wav", 75, pl.voicePitch, 1, CHAN_VOICE)
+	end
+	-- FEMALE --
+	
+	table.insert(warningPositions, pl:EyePos())
+	
+	for _, pl in pairs(player.GetAll()) do
+		net.Start("PlayerWarningPositions")
+			net.WriteVector(warningPositions[1])
+		net.Send(pl)
+	end
+	
+	timer.Simple(12, function() PlayerWarningRemove() end)
+end
+
+// Connected with Player Warning, get rid of that one warning sign.
+function PlayerWarningRemove()
+	table.remove(warningPositions, 1)
+	for _, pl in pairs(player.GetAll()) do
+		if warningPositions[1] then
+			net.Start("PlayerWarningPositions")
+				net.WriteVector(warningPositions[1])
+			net.Send(pl)
+		else
+			warningPositions = {}
+			net.Start("PlayerWarningPositionsDisable")
+			net.Send(pl)
+		end
+	end
+end
+
+
+// Some taunt sounds.
+function PlayerTaunt(killer)
+	if (game.SinglePlayer()) then return end
+	if (killer:Team() != TEAM_ALIVE) then return end
+	if (!killer:Alive()) then return end
+	
+	local modelNameGender = player_manager.TranslatePlayerModel(killer:GetInfo("cl_playermodel"))
+
+	-- MALE --
+	if modelNameGender && table.HasValue(PLAYER_MODELS_MALE, string.lower(modelNameGender)) then
+		killer:EmitSound(MALE_TAUNT_SOUNDS[math.random(1, #MALE_TAUNT_SOUNDS)], 75, killer.voicePitch, 1, CHAN_VOICE)
+	end
+	-- MALE --
+
+	-- FEMALE --
+	if modelNameGender && table.HasValue(PLAYER_MODELS_FEMALE, string.lower(modelNameGender)) then
+		killer:EmitSound(FEMALE_TAUNT_SOUNDS[math.random(1, #FEMALE_TAUNT_SOUNDS)], 75, killer.voicePitch, 1, CHAN_VOICE)
+	end
+	-- FEMALE --
+
+	// Do we really want these custom voice lines playing when playermodel restrictions are on? We're gonna have combine rebels if I don't do this.
+	if GetConVarNumber("hl2c_playermodel_restrictions") == 0 then
+		
+		-- ALYX --
+		if modelNameGender == "models/player/alyx.mdl" then
+			killer:EmitSound("vo/npc/alyx/brutal02.wav", 75, killer.voicePitch, 1, CHAN_VOICE)
+		end
+		-- ALYX --
+		
+		-- BARNEY --
+		if modelNameGender == "models/player/barney.mdl" then
+			killer:EmitSound("vo/npc/barney/ba_laugh0"..math.random(1, 4)..".wav", 75, killer.voicePitch, 1, CHAN_VOICE)
+		end
+		-- BARNEY --
+
+	end
+end
+
+
+// Some random voice lines
+function PlayerVoiceLine(pl)
+	if (GetConVarNumber("hl2c_additions") == 0) then return end
+	if (game.SinglePlayer()) then return end
+	if (pl:Team() != TEAM_ALIVE) then pl:EmitSound("ambient/levels/citadel/strange_talk"..math.random(3, 11)..".wav", 75, 100, 1, CHAN_VOICE) return end
+	if (!pl:Alive()) then return end
+	
+	local modelNameGender = player_manager.TranslatePlayerModel(pl:GetInfo("cl_playermodel"))
+
+	-- MALE --
+	if modelNameGender && table.HasValue(PLAYER_MODELS_MALE, string.lower(modelNameGender)) then
+		pl:EmitSound(MALE_VOICELINE_SOUNDS[math.random(1, #MALE_VOICELINE_SOUNDS)], 75, pl.voicePitch, 1, CHAN_VOICE)
+	end
+	-- MALE --
+
+	-- FEMALE --
+	if modelNameGender && table.HasValue(PLAYER_MODELS_FEMALE, string.lower(modelNameGender)) then
+		pl:EmitSound(FEMALE_VOICELINE_SOUNDS[math.random(1, #FEMALE_VOICELINE_SOUNDS)], 75, pl.voicePitch, 1, CHAN_VOICE)
+	end
+	-- FEMALE --
+	
+	// Do we really want these custom voice lines playing when playermodel restrictions are on? We're gonna have combine rebels if I don't do this.
+	if GetConVarNumber("hl2c_playermodel_restrictions") == 0 then
+	
+		-- COMBINE --
+		if modelNameGender && table.HasValue(PLAYER_MODELS_COMBINE, string.lower(modelNameGender)) then
+			pl:EmitSound(COMBINE_VOICELINE_SOUNDS[math.random(1, #COMBINE_VOICELINE_SOUNDS)], 75, pl.voicePitch, 1, CHAN_VOICE)
+		end
+		-- COMBINE --
+		
 	end
 end
 
@@ -271,6 +524,46 @@ function GM:GrabAndSwitch()
 	game.ConsoleCommand("changelevel "..NEXT_MAP.."\n")
 end
 
+
+// Called by point_changelevel_extra
+function GM:GrabAndSwitchExtra()
+	for _, pl in pairs(player.GetAll()) do
+		local plInfo = {}
+		local plWeapons = pl:GetWeapons()
+		
+		plInfo.predicted_map = NEXT_MAP
+		plInfo.health = pl:Health()
+		plInfo.armor = pl:Armor()
+		plInfo.score = pl:Frags()
+		plInfo.deaths = pl:Deaths()
+		plInfo.model = pl.modelName
+		
+		if plWeapons && #plWeapons > 0 then
+			plInfo.loadout = {}
+			
+			for _, wep in pairs(plWeapons) do
+				plInfo.loadout[wep:GetClass()] = {pl:GetAmmoCount(wep:GetPrimaryAmmoType()), pl:GetAmmoCount(wep:GetSecondaryAmmoType())}
+			end
+		end
+		
+		file.Write("hl2c_userid_info/hl2c_userid_info_"..pl:UniqueID()..".txt", util.TableToKeyValues(plInfo))
+	end
+	
+	-- Crash Recovery --
+	if game.IsDedicated(true) then
+		local savedMap = {}
+		
+		savedMap.predicted_crash = EXTRA_MAP
+		
+		file.Write("hl2c_data/hl2c_crash_recovery.txt", util.TableToKeyValues(savedMap))
+	end
+	-- End --
+	
+	// Switch maps
+	game.ConsoleCommand("changelevel "..EXTRA_MAP.."\n")
+end
+
+
 // Added these here because they were undefined!
 deadPlayers = {}
 difficulty = 1
@@ -278,6 +571,7 @@ changingLevel = false
 checkpointPositions = {}
 nextAreaOpenTime = 0
 startingWeapons = {}
+warningPositions = {}
 
 // Called immediately after starting the gamemode  
 function GM:Initialize()
@@ -287,6 +581,7 @@ function GM:Initialize()
 	checkpointPositions = {}
 	nextAreaOpenTime = 0
 	startingWeapons = {}
+	warningPositions = {}
 	
 	// We want regular fall damage and the ai to attack players and stuff
 	game.ConsoleCommand("ai_disabled 0\n")
@@ -296,19 +591,57 @@ function GM:Initialize()
 	game.ConsoleCommand("physgun_limited 1\n")
 	game.ConsoleCommand("ai_serverragdolls 0\n")
 	if GetConVarNumber("hl2c_additions") >= 1 then
-		game.ConsoleCommand("sv_rollangle 4\n")
+		game.ConsoleCommand("sv_rollangle 2\n")
 	else
 		game.ConsoleCommand("sv_rollangle 0\n")
 	end
 	if string.find(game.GetMap(), "ep1_") || string.find(game.GetMap(), "ep2_") then
 		game.ConsoleCommand("hl2_episodic 1\n")
 	end
+	if string.find(game.GetMap(), "t0a") || string.find(game.GetMap(), "c0a") || string.find(game.GetMap(), "c1a") || string.find(game.GetMap(), "c2a") || string.find(game.GetMap(), "c3a") || string.find(game.GetMap(), "c4a") || string.find(game.GetMap(), "c5a") then
+		HL1_CAMPAIGN = true
+	else
+		HL1_CAMPAIGN = false
+	end
 	
-	// Kill the engine if HL2 is not mounted.
-	if !game.IsDedicated(true) then
-		if !IsMounted("hl2") then
-			// If the player manages to pass the server disconnection, just kill the whole engine with this.
-			game.ConsoleCommand("disconnect\n")
+	// Super gravity gun test
+	if SUPER_GRAVITY_GUN then
+		RunConsoleCommand("physcannon_pullforce", "8000")
+		RunConsoleCommand("physcannon_tracelength", "850")
+	end
+	
+	// Kill the engine if *** is not mounted.
+	if GetConVarNumber("hl2c_classic") == 0 then
+		if !game.IsDedicated(true) then
+			-- Half-Life 2
+			if string.find(game.GetMap(), "d1_") || string.find(game.GetMap(), "d2_") || string.find(game.GetMap(), "d3_") then
+				if !IsMounted("hl2") then
+					// Just kill the whole engine with this.
+					game.ConsoleCommand("killserver\n")
+				end
+			end
+				
+			-- Episode 1
+			if string.find(game.GetMap(), "ep1_") then
+				if !IsMounted("episodic") then
+					// Just kill the whole engine with this.
+					game.ConsoleCommand("killserver\n")
+				end
+			end
+			
+			-- Episode 2
+			if string.find(game.GetMap(), "ep2_") then
+				if !IsMounted("ep2") then
+					// Just kill the whole engine with this.
+					game.ConsoleCommand("killserver\n")
+				end
+			end
+				
+			-- Half-Life: Source
+			if HL1_CAMPAIGN == true && !IsMounted("hl1") then
+				// Just kill the whole engine with this.
+				game.ConsoleCommand("killserver\n")
+			end
 		end
 	end
 	
@@ -462,6 +795,20 @@ function GM:InitPostEntity()
 		end
 	end
 	
+	// Setup TRIGGER_VEHICLESPAWN
+	if TRIGGER_VEHICLESPAWN then
+		for _, tvsInfo in pairs(TRIGGER_VEHICLESPAWN) do
+			local tvs = ents.Create("trigger_vehiclespawn")
+			
+			tvs.min = tvsInfo[1]
+			tvs.max = tvsInfo[2]
+			tvs.pos = tvs.max - ((tvs.max - tvs.min) / 2)
+			
+			tvs:SetPos(tvs.pos)
+			tvs:Spawn()
+		end
+	end
+	
 	// Setup TRIGGER_DELAYMAPLOAD
 	if TRIGGER_DELAYMAPLOAD then
 		GAMEMODE:CreateTDML(TRIGGER_DELAYMAPLOAD[1], TRIGGER_DELAYMAPLOAD[2])
@@ -480,9 +827,19 @@ function GM:InitPostEntity()
 	end
 	table.insert(checkpointPositions, tdmlPos)
 	
-	umsg.Start("SetCheckpointPosition", RecipientFilter():AddAllPlayers())
-	umsg.Vector(checkpointPositions[#checkpointPositions])
-	umsg.End()
+	// Old usermessages
+	if GetConVarNumber("hl2c_use_old_umsg") >= 1 then
+		umsg.Start("SetCheckpointPosition", RecipientFilter():AddAllPlayers())
+		umsg.Vector(checkpointPositions[#checkpointPositions])
+		umsg.End()
+	elseif GetConVarNumber("hl2c_use_old_umsg") == 0 then
+		// Use the new net library
+		for _, pl in pairs(player.GetAll()) do
+			net.Start("SetCheckpointPosition")
+				net.WriteVector(checkpointPositions[#checkpointPositions])
+			net.Send(pl)	
+		end
+	end
 	
 	-- Crash Recovery --
 	// Let me execute this so we go back to the map that we crashed on.
@@ -497,14 +854,41 @@ function GM:InitPostEntity()
 		end
 	-- End --
 	
-	-- Is HL2 Mounted? --
-	-- // A simple disconnection if the game doesn't have HL2 mounted.
-	-- if !game.IsDedicated(true) then
-		-- if !IsMounted("hl2") then
-			-- // This shuts the listen server down. This won't give an Engine Error.
-			-- game.ConsoleCommand("disconnect\n")
-		-- end
-	-- end
+	-- Is *** Mounted? --
+	// Classic Mode way.
+	if GetConVarNumber("hl2c_classic") >= 1 then // This was the original way I was going to do to the players.
+		if !game.IsDedicated(true) then
+			-- Half-Life 2
+			if string.find(game.GetMap(), "d1_") || string.find(game.GetMap(), "d2_") || string.find(game.GetMap(), "d3_") then
+				if !IsMounted("hl2") then
+					// This shuts the listen server down. This won't give an Engine Error.
+					game.ConsoleCommand("killserver\n")
+				end
+			end
+			
+			-- Episode 1
+			if string.find(game.GetMap(), "ep1_") then
+				if !IsMounted("episodic") then
+					// This shuts the listen server down. This won't give an Engine Error.
+					game.ConsoleCommand("killserver\n")
+				end
+			end
+			
+			-- Episode 2
+			if string.find(game.GetMap(), "ep2_") then
+				if !IsMounted("ep2") then
+					// This shuts the listen server down. This won't give an Engine Error.
+					game.ConsoleCommand("killserver\n")
+				end
+			end
+			
+			-- Half-Life: Source
+			if HL1_CAMPAIGN == true && !IsMounted("hl1") then
+				// This shuts the listen server down. This won't give an Engine Error.
+				game.ConsoleCommand("killserver\n")
+			end
+		end
+	end
 	-- End --
 	
 	// Fix NPCs not killing or targeting you
@@ -518,6 +902,7 @@ function GM:InitPostEntity()
 		envG1:Spawn()
 		envG1:Activate()
 		envG1:Fire("turnoff", "", "1.0")
+		envG1:Fire("kill", "", "5.0")
 		
 		local envG2 = ents.Create("env_global")
 		envG2:SetPos(Vector(-150, 100, -150))
@@ -528,14 +913,7 @@ function GM:InitPostEntity()
 		envG2:Spawn()
 		envG2:Activate()
 		envG2:Fire("turnoff", "", "1.0")
-	end
-	
-	// NEW! Custom Weapon spawning.
-	// It gets boring having to re-do all the map.lua files so people spawn with custom weapons, lets do something to fix that..
-	if !string.find(game.GetMap(), "d1_trainstation_") then
-		if file.Exists("hl2c_custom/hl2c_custom_weapons.lua", "LUA") then
-			include("hl2c_custom/hl2c_custom_weapons.lua")
-		end
+		envG2:Fire("kill", "", "5.0")
 	end
 	
 	if !game.SinglePlayer() then
@@ -543,6 +921,15 @@ function GM:InitPostEntity()
 		local triggerMultiples = ents.FindByName("fall_trigger")
 		for _, falltrigger in pairs(triggerMultiples) do
 			falltrigger:Remove()
+		end
+	end
+	
+	if HL1_START_TRAM == true then
+		local ips2 = ents.FindByClass("info_player_start")
+		local tram = ents.FindByName("train")
+		for _, parips in pairs(ips2) do
+			parips:SetMoveType( MOVETYPE_NONE )
+			parips:SetParent( tram[1], -1 )
 		end
 	end
 		
@@ -603,9 +990,17 @@ function GM:NextMap()
 	umsg.End()
 	
 	if GetConVarNumber("hl2c_old_nextmap_timer") == 0 then
-		timer.Simple(NEXT_MAP_TIME, function() GAMEMODE:GrabAndSwitch() end) -- New code. After finding out this causes an error sometimes, I had to do this.
+		if GetConVarNumber("hl2c_classic") >= 1 then
+			timer.Simple(NEXT_MAP_TIME_CLASSIC, function() GAMEMODE:GrabAndSwitch() end) -- New code. After finding out this causes an error sometimes, I had to do this.
+		elseif GetConVarNumber("hl2c_classic") == 0 then
+			timer.Simple(NEXT_MAP_TIME, function() GAMEMODE:GrabAndSwitch() end) -- New code. After finding out this causes an error sometimes, I had to do this.
+		end
 	else
-		timer.Simple(NEXT_MAP_TIME, GAMEMODE.GrabAndSwitch) -- Old code. Seems to still work in current GMod. This way appears more stable for some reason.
+		if GetConVarNumber("hl2c_classic") >= 1 then
+			timer.Simple(NEXT_MAP_TIME_CLASSIC, GAMEMODE.GrabAndSwitch) -- Old code. Seems to still work in current GMod. This way appears more stable for some reason.
+		elseif GetConVarNumber("hl2c_classic") == 0 then
+			timer.Simple(NEXT_MAP_TIME, GAMEMODE.GrabAndSwitch) -- Old code. Seems to still work in current GMod. This way appears more stable for some reason.
+		end
 	end
 end
 concommand.Add("hl2c_next_map", function(pl) if pl:IsAdmin() then GAMEMODE:NextMap() end end)
@@ -622,7 +1017,7 @@ function GM:OnNPCKilled(npc, killer, weapon)
 		if table.HasValue(GODLIKE_NPCS, npc:GetClass()) || npc:GetName() == "rocketman" then
 			if !game.SinglePlayer() then -- This should only end up being used in multiplayer.
 				game.ConsoleCommand("kickid "..killer:UserID().." \"Killed an important NPC actor!\"\n")
-				GAMEMODE:RestartMapDueToNPCDeath()
+				GAMEMODE:RestartMap()
 			end
 		elseif NPC_POINT_VALUES[npc:GetClass()] then
 			killer:AddFrags(NPC_POINT_VALUES[npc:GetClass()])
@@ -645,13 +1040,26 @@ function GM:OnNPCKilled(npc, killer, weapon)
  	if weapon && weapon != NULL then weaponClass = weapon:GetClass() end 
  	if killer && killer != NULL then killerClass = killer:GetClass() end 
 	
+	// Play a random taunt sound
+	if GetConVarNumber("hl2c_additions") >= 1 then
+		if killer && killer != NULL && killer:IsPlayer() then
+			if (table.HasValue(FRIENDLY_NPCS, npc:GetClass()) || table.HasValue(GODLIKE_NPCS, npc:GetClass())) then
+				return
+			end
+		
+			if (math.random(1, 6) <= 3) then
+				PlayerTaunt(killer)
+			end
+		end
+	end
+	
 	// Send a message
  	if killer && killer != NULL && killer:IsPlayer() then 
- 		umsg.Start("PlayerKilledNPC") 
- 		umsg.String(npc:GetClass()) 
- 		umsg.String(weaponClass) 
- 		umsg.Entity(killer) 
- 		umsg.End() 
+		net.Start("PlayerKilledNPC")
+			net.WriteString(npc:GetClass())
+			net.WriteString(weaponClass)
+			net.WriteEntity(killer)
+		net.Broadcast()
  	end
 end
 
@@ -663,6 +1071,10 @@ function GM:PlayerCanPickupWeapon(pl, weapon)
 		return false
 	end
 	
+	if SUPER_GRAVITY_GUN && weapon:GetClass() != "weapon_physcannon" then
+		return false
+	end
+	
 	if weapon:GetClass() == "weapon_stunstick" && GetConVarNumber("hl2c_allow_stunstick") == 0 then
 		weapon:Remove()
 		return false
@@ -671,6 +1083,90 @@ function GM:PlayerCanPickupWeapon(pl, weapon)
 	if game.SinglePlayer() && weapon:GetClass() == "weapon_medkit_hl2c" then -- Medkits are stupid in Singleplayer.
 		weapon:Remove()
 		return false
+	end
+	
+	if GetConVarNumber("hl2c_classic") >= 1 && weapon:GetClass() == "weapon_medkit_hl2c" then -- Medkits weren't in HL2C 1.2.6.
+		weapon:Remove()
+		return false
+	end
+	
+	
+	if GetConVarNumber("hl2c_ammo_limits") >= 1 then
+	
+		if weapon:GetClass() == "weapon_slam" then
+			if pl:GetAmmoCount("slam") >= GetConVarNumber("hl2c_ammo_slam_max") then
+				return false
+			end
+		end
+		
+	end
+	
+	return true
+end
+
+
+// Called when a player tries to pickup a item
+function GM:PlayerCanPickupItem(pl, item)
+	if pl:Team() != TEAM_ALIVE then
+		return false
+	end
+	
+	if GetConVarNumber("hl2c_ammo_limits") >= 1 then
+	
+		if item:GetClass() == "item_ammo_pistol" || item:GetClass() == "item_ammo_pistol_large" then
+			if pl:GetAmmoCount("pistol") >= GetConVarNumber("hl2c_ammo_pistol_max") then
+				return false
+			end
+		end
+		
+		if item:GetClass() == "item_ammo_357" || item:GetClass() == "item_ammo_357_large" then
+			if pl:GetAmmoCount("357") >= GetConVarNumber("hl2c_ammo_357_max") then
+				return false
+			end
+		end
+		
+		if item:GetClass() == "item_ammo_smg1" || item:GetClass() == "item_ammo_smg1_large" then
+			if pl:GetAmmoCount("smg1") >= GetConVarNumber("hl2c_ammo_smg1_max") then
+				return false
+			end
+		end
+		
+		if item:GetClass() == "item_ammo_smg1_grenade" then
+			if pl:GetAmmoCount("smg1_grenade") >= GetConVarNumber("hl2c_ammo_smg1_grenade_max") then
+				return false
+			end
+		end
+		
+		if item:GetClass() == "item_ammo_ar2" || item:GetClass() == "item_ammo_ar2_large" then
+			if pl:GetAmmoCount("ar2") >= GetConVarNumber("hl2c_ammo_ar2_max") then
+				return false
+			end
+		end
+		
+		if item:GetClass() == "item_ammo_ar2_altfire" then
+			if pl:GetAmmoCount("ar2altfire") >= GetConVarNumber("hl2c_ammo_ar2altfire_max") then
+				return false
+			end
+		end
+		
+		if item:GetClass() == "item_box_buckshot" then
+			if pl:GetAmmoCount("buckshot") >= GetConVarNumber("hl2c_ammo_buckshot_max") then
+				return false
+			end
+		end
+		
+		if item:GetClass() == "item_ammo_crossbow" then
+			if pl:GetAmmoCount("xbowbolt") >= GetConVarNumber("hl2c_ammo_xbowbolt_max") then
+				return false
+			end
+		end
+		
+		if item:GetClass() == "item_rpg_round" then
+			if pl:GetAmmoCount("rpg_round") >= GetConVarNumber("hl2c_ammo_rpg_round_max") then
+				return false
+			end
+		end
+	
 	end
 	
 	return true
@@ -696,16 +1192,16 @@ function GM:PlayerInitialSpawn(pl)
 	pl.startTime = CurTime()
 	pl:SetTeam(TEAM_ALIVE)
 	
-	// If a player joined, print a message.
-	if !game.SinglePlayer() then
-		if !pl:IsBot() then
-			PrintMessage(HUD_PRINTTALK, pl:Nick() .." has joined the game.")
-		end
+	// Send this to clients that Sandbox mode is on
+	if GetConVarNumber("hl2c_spawnmenu") >= 1 then
+		net.Start("SpawnMenuEnabled")
+		net.Send(pl)
 	end
 	
 	// In Singleplayer, don't let the players wait for the level to change or restart
 	if game.SinglePlayer() then
 		NEXT_MAP_TIME = 0
+		NEXT_MAP_TIME_CLASSIC = 0
 		RESTART_MAP_TIME = 4
 	end
 	
@@ -740,9 +1236,15 @@ function GM:PlayerInitialSpawn(pl)
 	end
 	
 	// Set current checkpoint
-	umsg.Start("PlayerInitialSpawn", pl)
-	umsg.Vector(checkpointPositions[1])
-	umsg.End()
+	if GetConVarNumber("hl2c_use_old_umsg") >= 1 then
+		umsg.Start("PlayerInitialSpawn", pl)
+		umsg.Vector(checkpointPositions[1])
+		umsg.End()
+	elseif GetConVarNumber("hl2c_use_old_umsg") == 0 then
+		net.Start("PlayerInitialSpawn")
+			net.WriteVector(checkpointPositions[1])
+		net.Send(pl)
+	end
 end 
 
 
@@ -854,13 +1356,32 @@ function GM:PlayerSpawn(pl)
 	pl.nextSetHealth = 0
 	pl.sprintDisabled = false
 	pl.flashlightDisabled = false
+	pl.vehicleAllowed = false
 	pl.vulnerable = true
 	timer.Simple(VULNERABLE_TIME, function(pl) if pl && pl:IsValid() then pl.vulnerable = true end end, pl)
+	
+	// Player buyable abilities
+	pl.abilityCycle = 0
+	pl.abilityEnergy = 100
+	pl.abilityInUse = false
+	pl.abilityInvis = false
+	pl.abilityInvinc = false
+	pl.abilityScaler = false
+	pl.voicePitch = 100
+	pl.abilitySuitCharge = false
 	
 	// Speed, loadout, and model
 	GAMEMODE:SetPlayerSpeed(pl, 190, 320)
 	GAMEMODE:PlayerSetModel(pl)
 	GAMEMODE:PlayerLoadout(pl)
+	
+	// Set more speed stuff.
+	pl:SetCrouchedWalkSpeed(0.3)
+	pl:SetDuckSpeed(0.3)
+	pl:SetUnDuckSpeed(0.3)
+	if HL1_CAMPAIGN == true then
+		pl:SetJumpPower(200)
+	end
 	
 	// Set stuff from last level
 	if pl.info then
@@ -882,9 +1403,14 @@ function GM:PlayerSpawn(pl)
 	
 	// If the player died before, kill them again
 	if table.HasValue(deadPlayers, pl:UniqueID()) then
-		pl:PrintMessage(HUD_PRINTTALK, "You may not respawn until the next map. Nice try though.")
+		if GetConVarNumber("hl2c_classic") >= 1 then
+			pl:PrintMessage(HUD_PRINTTALK, "You may not respawn until the next map or when a checkpoint is reached. Nice try though.")
+		elseif GetConVarNumber("hl2c_classic") == 0 then
+			pl:PrintMessage(HUD_PRINTTALK, "You may not respawn until the next map. Nice try though.")
+		end
 		
 		pl.deathPos = pl:EyePos()
+		pl.deathPosBeta = pl:GetPos()
 		
 		pl:RemoveVehicle()
 		pl:Flashlight(false)
@@ -896,7 +1422,7 @@ function GM:PlayerSpawn(pl)
 
 	if GetConVarNumber("hl2c_hev_hands") >= 1 then
 		pl:SetupHands()
-	elseif GetConVarNumber("hl2c_hev_hands") != 1 then
+	elseif GetConVarNumber("hl2c_hev_hands") == 0 then
 			local oldhands = pl:GetHands()
 			if ( IsValid( oldhands ) ) then oldhands:Remove() end
 
@@ -925,12 +1451,37 @@ function GM:PlayerSpawn(pl)
 				end
 	end
 	
+	// Temporary feature.
+	if !PLAYER_IS_CITIZEN then
+		if !string.find(game.GetMap(), "d1_trainstation_") then
+			if GetConVarString("hl2c_custom_weapon_1") != "" then
+					pl:Give(GetConVarString("hl2c_custom_weapon_1"))
+			end
+				
+			if GetConVarString("hl2c_custom_weapon_2") != "" then
+				pl:Give(GetConVarString("hl2c_custom_weapon_2"))
+			end
+				
+			if GetConVarString("hl2c_custom_weapon_3") != "" then
+				pl:Give(GetConVarString("hl2c_custom_weapon_3"))
+			end
+		end
+	end
 end
 
 // Called when a player uses their flashlight
 function GM:PlayerSwitchFlashlight(pl, on)
 	if pl:Team() != TEAM_ALIVE then
 		return false
+	end
+	
+	// Replaced the old Think way of making the flashlight not work when HEV is off.
+	if GetConVarNumber("hl2c_classic") >= 1 then
+		return true
+	elseif GetConVarNumber("hl2c_classic") == 0 then
+		if pl:IsSuitEquipped() == false then
+			return false
+		end
 	end
 	
 	return true
@@ -943,14 +1494,14 @@ function GM:PlayerUse(pl, ent)
 		return false
 	end
 	
+	if (ent:IsVehicle() && pl.abilityScaler) then
+		return false
+	end
+	
 	if !game.SinglePlayer() then
 		if GetConVarNumber("hl2c_passenger_seats") >= 1 then
 			if ent:GetName() == "hl2c_passenger_seat" then
-				if GetConVarNumber("hl2c_passenger_seats_weapons") == 1 || GetConVarNumber("hl2c_passenger_seats_weapons") >= 1 then
-					pl:SetAllowWeaponsInVehicle(true)
-				elseif GetConVarNumber("hl2c_passenger_seats_weapons") == 0 then
-					pl:SetAllowWeaponsInVehicle(false)
-				end
+				pl:SetAllowWeaponsInVehicle(true)
 			elseif ent:GetName() != "hl2c_passenger_seat" then
 				pl:SetAllowWeaponsInVehicle(false)
 			end
@@ -983,28 +1534,6 @@ function GM:RestartMap()
 	timer.Simple(RESTART_MAP_TIME, function() game.ConsoleCommand( "changelevel "..game.GetMap().."\n") end)
 end
 concommand.Add("hl2c_restart_map", function(pl, command, arguments) if pl:IsAdmin() then GAMEMODE:RestartMap() end end)
-
-
-// Called automatically
-function GM:RestartMapDueToNPCDeath()
-	
-	if changingLevel then
-		return
-	end
-	
-	changingLevel = true
-	
-	umsg.Start("RestartMap", RecipientFilter():AddAllPlayers())
-	umsg.Long(CurTime())
-	umsg.End()
-	
-	for _, pl in pairs(player.GetAll()) do
-		pl:SendLua("GAMEMODE.ShowScoreboard = true")
-		PrintMessage(HUD_PRINTTALK, "An important NPC actor died!")
-	end
-	
-	timer.Simple(RESTART_MAP_TIME, function() game.ConsoleCommand( "changelevel "..game.GetMap().."\n") end)
-end
 
 
 // Admins can respawn all the dead players.
@@ -1068,15 +1597,15 @@ end
 
 // Called when player presses their help key
 function GM:ShowHelp(pl)
-	umsg.Start("ShowHelp", pl)
-	umsg.End()
+	net.Start("ShowHelp")
+	net.Send(pl)
 end
 
 
 // Called when a player presses their show team key
 function GM:ShowTeam(pl)
-	umsg.Start("ShowTeam", pl)
-	umsg.End()
+	net.Start("ShowTeam")
+	net.Send(pl)
 end
 
 
@@ -1086,7 +1615,11 @@ function GM:ShowSpare1(pl, pos, range)
 		return
 	end
 	
-	pl:RemoveVehicle()
+	if pl.vehicleAllowed == true && NEW_VEHICLE_SPAWN == true then
+		pl:RemoveVehicle()
+	elseif NEW_VEHICLE_SPAWN != true then
+		pl:RemoveVehicle()
+	end
 	
 	// Spawn the vehicle
 	if ALLOWED_VEHICLE then
@@ -1095,6 +1628,13 @@ function GM:ShowSpare1(pl, pos, range)
 		
 		if !vehicle then
 			return
+		end
+		
+		if NEW_VEHICLE_SPAWN == true then
+			if pl.vehicleAllowed != true then
+				pl:ChatPrint("You're not in a vehicle spawning area!")
+				return
+			end
 		end
 		
 		// Create the new entity
@@ -1127,7 +1667,7 @@ function GM:ShowSpare1(pl, pos, range)
 		// Passenger seats in Singleplayer are useless.
 		if !game.SinglePlayer() then
 			// Passenger Seats for Jeep
-			if GetConVarNumber("hl2c_passenger_seats") == 1 || GetConVarNumber("hl2c_passenger_seats") >= 1 then
+			if GetConVarNumber("hl2c_passenger_seats") >= 1 then
 				if ALLOWED_VEHICLE == "Jeep" || ALLOWED_VEHICLE == "Named Jeep" then
 					local spawnedvehicle = pl.vehicle
 					local seat = ents.Create( "prop_vehicle_prisoner_pod" )
@@ -1143,7 +1683,7 @@ function GM:ShowSpare1(pl, pos, range)
 			end
 			
 			// Passenger Seats for Airboat
-			if GetConVarNumber("hl2c_passenger_seats") == 1 || GetConVarNumber("hl2c_passenger_seats") >= 1 then
+			if GetConVarNumber("hl2c_passenger_seats") >= 1 then
 				if ALLOWED_VEHICLE == "Airboat" || ALLOWED_VEHICLE == "Named Airboat" || ALLOWED_VEHICLE == "Airboat Gun" then
 					local spawnedvehicle2 = pl.vehicle
 					local seat2 = ents.Create( "prop_vehicle_prisoner_pod" )
@@ -1166,8 +1706,13 @@ end
 
 // Called when player wants to remove their vehicle
 function GM:ShowSpare2(pl)
-	pl:ExitVehicle()
-	pl:RemoveVehicle()
+	if pl.vehicleAllowed == true && NEW_VEHICLE_SPAWN == true then	
+		pl:ExitVehicle()
+		pl:RemoveVehicle()
+	elseif NEW_VEHICLE_SPAWN != true then
+		pl:ExitVehicle()
+		pl:RemoveVehicle()
+	end
 end
 
 
@@ -1177,30 +1722,73 @@ function GM:Think()
 		GAMEMODE:RestartMap()
 	end
 	
-	// Is player a citizen?
-	for _, pl in pairs(player.GetAll()) do
-		if pl:Team() == TEAM_ALIVE && !PLAYER_IS_CITIZEN || pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN != true then
-			if GetConVarNumber("hl2c_additions") >= 1 then
-				if (pl:SteamID() == "STEAM_0:0:49332102" || pl:SteamID() == "STEAM_0:0:16219541") && !game.SinglePlayer() then
+	// Classic mode never had these commands.
+	if GetConVarNumber("hl2c_classic") >= 1 then
+		game.ConsoleCommand("hl2c_additions 0\n")
+		game.ConsoleCommand("hl2c_allow_respawn 0\n")
+		game.ConsoleCommand("hl2c_allow_stunstick 0\n")
+		game.ConsoleCommand("hl2c_drop_weapon_on_death 0\n")
+		game.ConsoleCommand("hl2c_passenger_seats 0\n")
+		game.ConsoleCommand("hl2c_hev_hands 0\n")
+		game.ConsoleCommand("hl2c_playermodel_restrictions 1\n")
+		game.ConsoleCommand("hl2c_old_nextmap_timer 1\n")
+		game.ConsoleCommand("hl2c_use_old_umsg 1\n")
+		game.ConsoleCommand("hl2c_ammo_limits 0\n")
+		
+		NEW_VEHICLE_SPAWN = false
+		
+		for _, pl in pairs(player.GetAll()) do
+			if GetConVarNumber("hl2c_use_old_umsg") >= 1 then
+				umsg.Start("ClassicMode", pl)
+				umsg.End()
+			elseif GetConVarNumber("hl2c_use_old_umsg") == 0 then
+				net.Start("ClassicMode")
+				net.Send(pl)
+			end
+		end
+	end
+	
+	if GetConVarNumber("hl2c_classic") == 0 then
+		// Is player a citizen?
+		for _, pl in pairs(player.GetAll()) do
+			if pl:Team() == TEAM_ALIVE && !PLAYER_IS_CITIZEN || pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN != true then
+				local plSteamID = pl:SteamID()
+			
+				if pl.abilityInvinc && !game.SinglePlayer() then
+					pl:SetPlayerColor( Vector( 0,0,0 ) )
+				elseif table.HasValue(BETA_TESTERS, plSteamID) && !game.SinglePlayer() then
 					pl:SetPlayerColor( Vector( 0.3,0,1 ) )
-				elseif pl:IsAdmin() && (pl:SteamID() != "STEAM_0:0:49332102" && pl:SteamID() != "STEAM_0:0:16219541") && !game.SinglePlayer() then
+				elseif pl:IsAdmin() && !table.HasValue(BETA_TESTERS, plSteamID) && !game.SinglePlayer() then
 					pl:SetPlayerColor( Vector( 0,0.3,0 ) )
 				else
 					pl:SetPlayerColor( Vector( 1,0.5,0 ) )
 				end
-			else
-				pl:SetPlayerColor( Vector( 1,0.5,0 ) )
+				pl:EquipSuit()
+				if HL1_CAMPAIGN == true then
+					GAMEMODE:SetPlayerSpeed(pl, 320, 320)
+				end
+			elseif pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN || pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN != false then
+				pl:SetPlayerColor( Vector( 0,0.5,1 ) )
+				pl:RemoveSuit()
+				if GetConVarNumber("hl2c_classic") == 0 then
+					if HL1_CAMPAIGN == false then
+						GAMEMODE:SetPlayerSpeed(pl, 140, 140)
+					elseif HL1_CAMPAIGN == true then
+						GAMEMODE:SetPlayerSpeed(pl, 320, 320)
+					end
+				end
 			end
-			pl:EquipSuit()
-		elseif pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN || pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN != false then
-			pl:SetPlayerColor( Vector( 0,0.5,1 ) )
-			pl:RemoveSuit()
+		end
+	elseif GetConVarNumber("hl2c_classic") >= 1 then
+		// Is player a citizen?
+		for _, pl in pairs(player.GetAll()) do
+			pl:SetPlayerColor( Vector( 1,0.5,0 ) )
 		end
 	end
 	
 	// For each player
 	for _, pl in pairs(player.GetAll()) do
-		if !pl:Alive() || pl:Team() != TEAM_ALIVE then
+		if !pl:Alive() || pl:Team() == TEAM_DEAD then
 			return
 		end
 		
@@ -1213,22 +1801,67 @@ function GM:Think()
 		end
 		
 		// Sprinting and water level
-		if pl.nextEnergyCycle < CurTime() then
-			if !pl:InVehicle() && ((pl:GetVelocity():Length() > 315 && pl:KeyDown(IN_SPEED))) then
-				pl.energy = pl.energy - 1
-			elseif pl:WaterLevel() == 3 && pl.energy > 0 then
-				pl.energy = pl.energy - .5
-			elseif pl:FlashlightIsOn() && pl.energy > 0 then
-				pl.energy = pl.energy - .2
-			elseif pl.energy < 100 then
-				pl.energy = pl.energy + .5
+		if GetConVarNumber("hl2c_classic") >= 1 then
+		
+			if pl.nextEnergyCycle < CurTime() then
+				if !pl:InVehicle() && ((pl:GetVelocity():Length() > 315 && pl:KeyDown(IN_SPEED))) then
+					pl.energy = pl.energy - 1
+				elseif pl:WaterLevel() == 3 && pl.energy > 0 then
+					pl.energy = pl.energy - .5
+				elseif pl.energy < 100 then
+					pl.energy = pl.energy + .5
+				end
+				
+				umsg.Start("UpdateEnergy", pl)
+				umsg.Short(pl.energy)
+				umsg.End()
+				
+				pl.nextEnergyCycle = CurTime() + 0.1
+			end
+		
+		elseif GetConVarNumber("hl2c_classic") == 0 then
+			
+			if pl.nextEnergyCycle < CurTime() then
+				if !pl:InVehicle() && ((pl:GetVelocity():Length() > 315 && pl:KeyDown(IN_SPEED))) then
+					if PLAYER_IS_CITIZEN != true then
+						if HL1_CAMPAIGN != true then
+							pl.energy = pl.energy - 1
+						end
+					end
+				elseif pl:WaterLevel() == 3 && pl.energy > 0 then
+					pl.energy = pl.energy - .5
+				elseif pl:FlashlightIsOn() && pl.energy > 0 then
+					pl.energy = pl.energy - .2
+				elseif pl.energy < 100 then
+					pl.energy = pl.energy + .5
+				end
+				
+				umsg.Start("UpdateEnergy", pl)
+				umsg.Short(pl.energy)
+				umsg.End()
+				
+				pl.nextEnergyCycle = CurTime() + 0.1
 			end
 			
-			umsg.Start("UpdateEnergy", pl)
-			umsg.Short(pl.energy)
-			umsg.End()
+			if pl.abilityCycle < CurTime() then
+				if pl.abilityInvis && pl.abilityEnergy > 0 then
+					pl.abilityEnergy = pl.abilityEnergy - .35
+				elseif pl.abilityInvinc && pl.abilityEnergy > 0 then
+					pl.abilityEnergy = pl.abilityEnergy - .65
+				elseif pl.abilityScaler && pl.abilityEnergy > 0 then
+					pl.abilityEnergy = pl.abilityEnergy - .25
+				elseif pl.abilitySuitCharge && pl.abilityEnergy > 0 then
+					pl.abilityEnergy = pl.abilityEnergy - .40
+					if pl:Armor() < 50 then
+						pl:SetArmor(pl:Armor() + 1)
+					end
+				elseif pl.abilityEnergy < 100 then
+					pl.abilityEnergy = pl.abilityEnergy + .2
+				end
+				
+				pl.abilityCycle = CurTime() + 0.1
+			end
 			
-			pl.nextEnergyCycle = CurTime() + 0.1
 		end
 		
 		// Now check if they have enough energy 
@@ -1243,8 +1876,13 @@ function GM:Think()
 				pl.nextSetHealth = CurTime() + 1
 				pl:SetHealth(pl:Health() - 10)
 				
-				umsg.Start("DrowningEffect", pl)
-				umsg.End()
+				if GetConVarNumber("hl2c_use_old_umsg") >= 1 then
+					umsg.Start("DrowningEffect", pl)
+					umsg.End()
+				elseif GetConVarNumber("hl2c_use_old_umsg") == 0 then
+					net.Start("DrowningEffect")
+					net.Send(pl)
+				end
 				
 				if pl:Alive() && pl:Health() < 1 then
 					pl:Kill()
@@ -1257,21 +1895,18 @@ function GM:Think()
 			GAMEMODE:SetPlayerSpeed(pl, 190, 320)
 		end
 		
-		// Flashlight should run out eventually
-		if pl.energy < 2 && pl:FlashlightIsOn() && !pl.flashlightDisabled then
-			pl.flashlightDisabled = true
-		elseif pl.energy >= 15 && pl.flashlightDisabled then
-			pl.flashlightDisabled = false
-		end
-		
-		// If the player is a citizen, that means the HEV suit isn't on, so we should turn the flashlight off
-		if pl:FlashlightIsOn() && PLAYER_IS_CITIZEN == true then
-			pl:Flashlight(false)
-		end
-		
-		// Turn the flashlight off
-		if pl.flashlightDisabled && pl:FlashlightIsOn() then
-			pl:Flashlight(false)
+		if GetConVarNumber("hl2c_classic") == 0 then
+			// Flashlight should run out eventually
+			if pl.energy < 2 && !pl.flashlightDisabled then
+				pl.flashlightDisabled = true
+			elseif pl.energy >= 15 && pl.flashlightDisabled then
+				pl.flashlightDisabled = false
+			end
+			
+			// Turn the flashlight off
+			if pl.flashlightDisabled && pl:FlashlightIsOn() then
+				pl:Flashlight(false)
+			end
 		end
 		
 		// Give back health if we can
@@ -1280,7 +1915,93 @@ function GM:Think()
 			pl:SetHealth(pl:Health() + 10)
 			pl.healthRemoved = pl.healthRemoved - 10
 		end
-	end
+		
+		// Check ability energy
+		if pl.abilityEnergy < 2 then
+			if pl.abilityInvis then
+				StopInvisibility(pl)
+			end
+			
+			if pl.abilityInvinc then
+				StopInvincibility(pl)
+			end
+			
+			if pl.abilityScaler then
+				StopScaler(pl)
+			end
+			
+			if pl.abilitySuitCharge then
+				StopSuitRecharge(pl)
+			end
+		end
+		
+		// NEW! Ammo check. Players will have default amounts of ammo like in HL2.
+		if GetConVarNumber("hl2c_ammo_limits") >= 1 then
+			if pl:IsValid() && pl:Alive() && pl:Team() == TEAM_ALIVE then
+				if !pl:GetActiveWeapon():IsValid() then return end
+			
+				if pl:GetActiveWeapon():GetClass() == "weapon_pistol" then
+					if pl:GetAmmoCount("pistol") > GetConVarNumber("hl2c_ammo_pistol_max") then
+						pl:SetAmmo(GetConVarNumber("hl2c_ammo_pistol_max"), "pistol")
+					end
+				end
+				
+				if pl:GetActiveWeapon():GetClass() == "weapon_357" then
+					if pl:GetAmmoCount("357") > GetConVarNumber("hl2c_ammo_357_max") then
+						pl:SetAmmo(GetConVarNumber("hl2c_ammo_357_max"), "357")
+					end
+				end
+				
+				if pl:GetActiveWeapon():GetClass() == "weapon_smg1" then
+					if pl:GetAmmoCount("smg1") > GetConVarNumber("hl2c_ammo_smg1_max") then
+						pl:SetAmmo(GetConVarNumber("hl2c_ammo_smg1_max"), "smg1")
+					end
+				end
+				
+				if pl:GetActiveWeapon():GetClass() == "weapon_smg1" then
+					if pl:GetAmmoCount("smg1_grenade") > GetConVarNumber("hl2c_ammo_smg1_grenade_max") then
+						pl:SetAmmo(GetConVarNumber("hl2c_ammo_smg1_grenade_max"), "smg1_grenade")
+					end
+				end
+				
+				if pl:GetActiveWeapon():GetClass() == "weapon_ar2" then
+					if pl:GetAmmoCount("ar2") > GetConVarNumber("hl2c_ammo_ar2_max") then
+						pl:SetAmmo(GetConVarNumber("hl2c_ammo_ar2_max"), "ar2")
+					end
+				end
+				
+				if pl:GetActiveWeapon():GetClass() == "weapon_ar2" then
+					if pl:GetAmmoCount("ar2altfire") > GetConVarNumber("hl2c_ammo_ar2altfire_max") then
+						pl:SetAmmo(GetConVarNumber("hl2c_ammo_ar2altfire_max"), "ar2altfire")
+					end
+				end
+				
+				if pl:GetActiveWeapon():GetClass() == "weapon_shotgun" then
+					if pl:GetAmmoCount("buckshot") > GetConVarNumber("hl2c_ammo_buckshot_max") then
+						pl:SetAmmo(GetConVarNumber("hl2c_ammo_buckshot_max"), "buckshot")
+					end
+				end
+				
+				if pl:GetActiveWeapon():GetClass() == "weapon_crossbow" then
+					if pl:GetAmmoCount("xbowbolt") > GetConVarNumber("hl2c_ammo_xbowbolt_max") then
+						pl:SetAmmo(GetConVarNumber("hl2c_ammo_xbowbolt_max"), "xbowbolt")
+					end
+				end
+				
+				if pl:GetActiveWeapon():GetClass() == "weapon_rpg" then
+					if pl:GetAmmoCount("rpg_round") > GetConVarNumber("hl2c_ammo_rpg_round_max") then
+						pl:SetAmmo(GetConVarNumber("hl2c_ammo_rpg_round_max"), "rpg_round")
+					end
+				end
+				
+				if pl:GetActiveWeapon():GetClass() == "weapon_slam" then
+					if pl:GetAmmoCount("slam") > GetConVarNumber("hl2c_ammo_slam_max") then
+						pl:SetAmmo(GetConVarNumber("hl2c_ammo_slam_max"), "slam")
+					end
+				end
+			end
+		end
+end
 	
 	// Change the difficulty according to number of players
 	difficulty = math.Clamp((#player.GetAll() + 1) / 3, DIFFICULTY_RANGE[1], DIFFICULTY_RANGE[2])
@@ -1295,13 +2016,266 @@ function GM:Think()
 		-- nextAreaOpenTime = CurTime() + 3
 	-- end
 	// Open area portals without regrets and only on multiplayer
-	if !game.SinglePlayer() then
-		local portalArea = ents.FindByClass("func_areaportal")
-		for _, fap in pairs(portalArea) do
-			fap:Remove()
-		end
+	local portalArea = ents.FindByClass("func_areaportal")
+	for _, fap in pairs(portalArea) do
+		fap:Fire("Open")
 	end
 end
+
+
+// Down here is where you can use score points to get abilities
+function BuyInvisibility(pl)
+	if !pl.abilityInUse then
+		if GetConVarNumber("hl2c_classic") >= 1 then
+			pl:PrintMessage(HUD_PRINTTALK, "Abilities are disabled in Classic Mode.")
+			return
+		elseif GetConVarNumber("hl2c_shop_allowed") == 0 then
+			pl:PrintMessage(HUD_PRINTTALK, "Shop is disabled.")
+			return
+		elseif game.SinglePlayer() then
+			pl:PrintMessage(HUD_PRINTTALK, "Abilities are disabled in SinglePlayer")
+			return
+		elseif GetConVarNumber("hl2c_additions") == 0 then
+			pl:PrintMessage(HUD_PRINTTALK, "Additions is disabled!")
+			return
+		elseif PLAYER_IS_CITIZEN == true then
+			pl:PrintMessage(HUD_PRINTTALK, "Not allowed!")
+			return
+		elseif pl:Frags() < 15 then
+			pl:PrintMessage(HUD_PRINTTALK, "Not enough Score Points!")
+			return
+		elseif pl.abilityEnergy < 100 then
+			pl:PrintMessage(HUD_PRINTTALK, "Please wait until your Ability Energy is charged.")
+			return
+		end
+		
+		pl:SetFrags(pl:Frags() - 15)
+		
+		pl.abilityInUse = true
+		pl.abilityInvis = true
+		net.Start("AbilityBought")
+			net.WriteString("Invisibility")
+		net.Send(pl)
+		pl:EmitSound("items/suitchargeok1.wav", 75, 100, 1, CHAN_STATIC)
+		GAMEMODE:SetPlayerSpeed(pl, 140, 140)
+		pl:SetMaterial("models/spawn_effect")
+		pl:SetNoTarget(true)
+	elseif pl.abilityInUse then
+		pl:PrintMessage(HUD_PRINTTALK, "Ability still in use, please wait.")
+	end
+end
+
+function StopInvisibility(pl)
+	if pl.abilityInUse then
+		pl.abilityInUse = false
+		pl.abilityInvis = false
+		pl:PrintMessage(HUD_PRINTTALK, "Ability wore off.")
+		pl:EmitSound("items/suitchargeno1.wav", 75, 100, 1, CHAN_STATIC)
+		GAMEMODE:SetPlayerSpeed(pl, 190, 320)
+		pl:SetMaterial("")
+		pl:SetNoTarget(false)
+	end
+end
+concommand.Add("hl2c_buy_invisibility", function(pl) if (pl && pl:IsValid() && pl:Team() == TEAM_ALIVE) then BuyInvisibility(pl) end end)
+
+
+function BuyInvincibility(pl)
+	if !pl.abilityInUse then
+		if GetConVarNumber("hl2c_classic") >= 1 then
+			pl:PrintMessage(HUD_PRINTTALK, "Abilities are disabled in Classic Mode.")
+			return
+		elseif GetConVarNumber("hl2c_shop_allowed") == 0 then
+			pl:PrintMessage(HUD_PRINTTALK, "Shop is disabled.")
+			return
+		elseif game.SinglePlayer() then
+			pl:PrintMessage(HUD_PRINTTALK, "Abilities are disabled in SinglePlayer")
+			return
+		elseif GetConVarNumber("hl2c_additions") == 0 then
+			pl:PrintMessage(HUD_PRINTTALK, "Additions is disabled!")
+			return
+		elseif PLAYER_IS_CITIZEN == true then
+			pl:PrintMessage(HUD_PRINTTALK, "Not allowed!")
+			return
+		elseif pl:Frags() < 30 then
+			pl:PrintMessage(HUD_PRINTTALK, "Not enough Score Points!")
+			return
+		elseif pl.abilityEnergy < 100 then
+			pl:PrintMessage(HUD_PRINTTALK, "Please wait until your Ability Energy is charged.")
+			return
+		end
+		
+		pl:SetFrags(pl:Frags() - 30)
+		
+		pl.abilityInUse = true
+		pl.abilityInvinc = true
+		net.Start("AbilityBought")
+			net.WriteString("Invincibility")
+		net.Send(pl)
+		pl:EmitSound("player/invuln_on_vaccinator.wav", 75, 100, 1, CHAN_STATIC)
+		pl:GodEnable()
+	elseif pl.abilityInUse then
+		pl:PrintMessage(HUD_PRINTTALK, "Ability still in use, please wait.")
+	end
+end
+
+function StopInvincibility(pl)
+	if pl.abilityInUse then
+		pl.abilityInUse = false
+		pl.abilityInvinc = false
+		pl:PrintMessage(HUD_PRINTTALK, "Ability wore off.")
+		pl:EmitSound("player/invuln_off_vaccinator.wav", 75, 100, 1, CHAN_STATIC)
+		pl:GodDisable()
+	end
+end
+concommand.Add("hl2c_buy_invincibility", function(pl) if (pl && pl:IsValid() && pl:Team() == TEAM_ALIVE) then BuyInvincibility(pl) end end)
+
+
+function BuyRespawn(pl)
+	if GetConVarNumber("hl2c_classic") >= 1 then
+		pl:PrintMessage(HUD_PRINTTALK, "Abilities are disabled in Classic Mode.")
+		return
+	elseif GetConVarNumber("hl2c_shop_allowed") == 0 then
+			pl:PrintMessage(HUD_PRINTTALK, "Shop is disabled.")
+			return
+	elseif game.SinglePlayer() then
+		pl:PrintMessage(HUD_PRINTTALK, "Abilities are disabled in SinglePlayer")
+		return
+	elseif GetConVarNumber("hl2c_additions") == 0 then
+		pl:PrintMessage(HUD_PRINTTALK, "Additions is disabled!")
+		return
+	elseif PLAYER_IS_CITIZEN == true then
+		pl:PrintMessage(HUD_PRINTTALK, "Not allowed!")
+		return
+	elseif pl:Frags() < 25 then
+		pl:PrintMessage(HUD_PRINTTALK, "Not enough Score Points!")
+		return
+	end
+
+	pl:SetFrags(pl:Frags() - 25)
+
+	net.Start("AbilityBought")
+		net.WriteString("Respawn")
+	net.Send(pl)
+	table.RemoveByValue(deadPlayers, pl:UniqueID())
+	pl:EmitSound("garrysmod/save_load"..math.random(1, 4)..".wav", 75, 100, 1, CHAN_STATIC)
+	
+	pl:SetTeam(TEAM_ALIVE)
+	pl:UnSpectate()
+	pl:Spawn()
+	pl:SetNoTarget(false)
+	pl:SetPos(pl.deathPosBeta)
+end
+concommand.Add("hl2c_buy_respawn", function(pl) if (pl && pl:IsValid() && pl:Team() == TEAM_DEAD) then BuyRespawn(pl) end end)
+
+
+function BuyScaler(pl)
+	if !pl.abilityInUse then
+		if GetConVarNumber("hl2c_classic") >= 1 then
+			pl:PrintMessage(HUD_PRINTTALK, "Abilities are disabled in Classic Mode.")
+			return
+		elseif GetConVarNumber("hl2c_shop_allowed") == 0 then
+			pl:PrintMessage(HUD_PRINTTALK, "Shop is disabled.")
+			return
+		elseif game.SinglePlayer() then
+			pl:PrintMessage(HUD_PRINTTALK, "Abilities are disabled in SinglePlayer")
+			return
+		elseif GetConVarNumber("hl2c_additions") == 0 then
+			pl:PrintMessage(HUD_PRINTTALK, "Additions is disabled!")
+			return
+		elseif PLAYER_IS_CITIZEN == true then
+			pl:PrintMessage(HUD_PRINTTALK, "Not allowed!")
+			return
+		elseif pl:Frags() < 25 then
+			pl:PrintMessage(HUD_PRINTTALK, "Not enough Score Points!")
+			return
+		elseif pl.abilityEnergy < 100 then
+			pl:PrintMessage(HUD_PRINTTALK, "Please wait until your Ability Energy is charged.")
+			return
+		end
+		
+		pl:SetFrags(pl:Frags() - 25)
+		
+		pl.abilityInUse = true
+		pl.abilityScaler = true
+		if pl:InVehicle() then
+			pl:ExitVehicle()
+		end
+		net.Start("AbilityBought")
+			net.WriteString("Smaller Self")
+		net.Send(pl)
+		pl:EmitSound("vehicles/tank_readyfire1.wav", 75, 100, 1, CHAN_STATIC)
+		if (math.random(1, 10) <= 5) then
+			pl:SetModelScale(0.3, 1)
+			pl.voicePitch = 150
+		else
+			pl:SetModelScale(1.6, 1)
+			pl:PrintMessage(HUD_PRINTTALK, "Whoops, It malfunctioned!")
+			pl.voicePitch = 75
+		end
+	elseif pl.abilityInUse then
+		pl:PrintMessage(HUD_PRINTTALK, "Ability still in use, please wait.")
+	end
+end
+
+function StopScaler(pl)
+	if pl.abilityInUse then
+		pl.abilityInUse = false
+		pl.abilityScaler = false
+		pl.voicePitch = 100
+		pl:PrintMessage(HUD_PRINTTALK, "Ability wore off.")
+		pl:EmitSound("vehicles/tank_turret_stop1.wav", 75, 100, 1, CHAN_STATIC)
+		pl:SetModelScale(1, 1)
+	end
+end
+concommand.Add("hl2c_buy_smallform", function(pl) if (pl && pl:IsValid() && pl:Team() == TEAM_ALIVE) then BuyScaler(pl) end end)
+
+
+function BuySuitRecharge(pl)
+	if !pl.abilityInUse then
+		if GetConVarNumber("hl2c_classic") >= 1 then
+			pl:PrintMessage(HUD_PRINTTALK, "Abilities are disabled in Classic Mode.")
+			return
+		elseif GetConVarNumber("hl2c_shop_allowed") == 0 then
+			pl:PrintMessage(HUD_PRINTTALK, "Shop is disabled.")
+			return
+		elseif game.SinglePlayer() then
+			pl:PrintMessage(HUD_PRINTTALK, "Abilities are disabled in SinglePlayer")
+			return
+		elseif GetConVarNumber("hl2c_additions") == 0 then
+			pl:PrintMessage(HUD_PRINTTALK, "Additions is disabled!")
+			return
+		elseif PLAYER_IS_CITIZEN == true then
+			pl:PrintMessage(HUD_PRINTTALK, "Not allowed!")
+			return
+		elseif pl:Frags() < 30 then
+			pl:PrintMessage(HUD_PRINTTALK, "Not enough Score Points!")
+			return
+		elseif pl.abilityEnergy < 100 then
+			pl:PrintMessage(HUD_PRINTTALK, "Please wait until your Ability Energy is charged.")
+			return
+		end
+		
+		pl:SetFrags(pl:Frags() - 30)
+		
+		pl.abilityInUse = true
+		pl.abilitySuitCharge = true
+		net.Start("AbilityBought")
+			net.WriteString("Suit Recharger")
+		net.Send(pl)
+		pl:EmitSound("items/battery_pickup.wav", 75, 100, 1, CHAN_STATIC)
+	elseif pl.abilityInUse then
+		pl:PrintMessage(HUD_PRINTTALK, "Ability still in use, please wait.")
+	end
+end
+
+function StopSuitRecharge(pl)
+	if pl.abilityInUse then
+		pl.abilityInUse = false
+		pl.abilitySuitCharge = false
+		pl:PrintMessage(HUD_PRINTTALK, "Ability wore off.")
+	end
+end
+concommand.Add("hl2c_buy_suitrecharger", function(pl) if (pl && pl:IsValid() && pl:Team() == TEAM_ALIVE) then BuySuitRecharge(pl) end end)
 
 
 // Player just picked up or was given a weapon

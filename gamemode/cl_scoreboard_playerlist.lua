@@ -54,7 +54,7 @@ function PANEL:PerformLayout()
 	self.nameLabel:SetPos(65, 0)
 	
 	self.healthLabel:SizeToContents()
-	self.healthLabel:SetPos(self:GetWide() - self.healthLabel:GetWide() - 200, 0)
+	self.healthLabel:SetPos(self:GetWide() - self.healthLabel:GetWide() - 170, 0)
 	
 	self.scoreLabel:SizeToContents()
 	self.scoreLabel:SetPos(self:GetWide() - self.scoreLabel:GetWide() - 100, 0)
