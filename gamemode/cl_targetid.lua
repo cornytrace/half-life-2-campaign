@@ -12,7 +12,15 @@ function GM:HUDDrawTargetID()
 	if (trace.Entity:IsPlayer()) then
 		text = trace.Entity:Nick().." ("..trace.Entity:Health().."%)"
 	elseif (trace.Entity:IsNPC()) then
-		text = trace.Entity:GetClass().." ("..trace.Entity:Health().."%)"
+		if (trace.Entity:GetClass() == "npc_alyx") then
+			text = "Alyx Vance ("..trace.Entity:Health().."%)"
+		elseif (trace.Entity:GetClass() == "npc_barney") then
+			text = "Barney Calhoun ("..trace.Entity:Health().."%)"
+		elseif (trace.Entity:GetClass() == "npc_citizen") then
+			text = "Citizen ("..trace.Entity:Health().."%)"
+		else
+			return
+		end
 	else
 		return
 	end

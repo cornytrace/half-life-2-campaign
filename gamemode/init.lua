@@ -44,8 +44,8 @@ if !ConVarExists("hl2c_hev_hands") then
 end
 
 // Debug: Show who is an admin
-if !ConVarExists("hl2c_admin_material") then
-	CreateConVar("hl2c_admin_material", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Toggle whether admins should have a cubemap material.")
+if !ConVarExists("hl2c_betatester_trails") then
+	CreateConVar("hl2c_betatester_trails", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Toggle whether admins should have a cubemap material.")
 end
 
 // Toggle whether bots should go on their own team(Spectator)
@@ -98,6 +98,8 @@ if !ConVarExists("hl2c_custom_weapon_1") then
 	CreateConVar("hl2c_custom_weapon_1", "", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Temporary feature.")
 	CreateConVar("hl2c_custom_weapon_2", "", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Temporary feature.")
 	CreateConVar("hl2c_custom_weapon_3", "", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Temporary feature.")
+	CreateConVar("hl2c_custom_weapon_4", "", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Temporary feature.")
+	CreateConVar("hl2c_custom_weapon_5", "", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Temporary feature.")
 end
 
 // Ammo limiting.
@@ -283,9 +285,11 @@ function GM:DoPlayerDeath(pl, attacker, dmgInfo)
 	
 	if HL1_CAMPAIGN == false then
 		if GetConVarNumber("hl2c_allow_respawn") == 0 || game.SinglePlayer() then
-			// Add to deadPlayers table to prevent respawning on re-connect
-			if !table.HasValue(deadPlayers, pl:UniqueID()) then
-				table.insert(deadPlayers, pl:UniqueID())
+			if !HL2MP_IS_COOP_MAP then
+				// Add to deadPlayers table to prevent respawning on re-connect
+				if !table.HasValue(deadPlayers, pl:UniqueID()) then
+					table.insert(deadPlayers, pl:UniqueID())
+				end
 			end
 		end
 	end
@@ -295,7 +299,9 @@ function GM:DoPlayerDeath(pl, attacker, dmgInfo)
 	pl:CreateRagdoll()
 	if HL1_CAMPAIGN == false then
 		if GetConVarNumber("hl2c_allow_respawn") == 0 || game.SinglePlayer() then
-			pl:SetTeam(TEAM_DEAD)
+			if !HL2MP_IS_COOP_MAP then
+				pl:SetTeam(TEAM_DEAD)
+			end
 		end
 	end
 	pl:AddDeaths(1)
@@ -734,16 +740,19 @@ function GM:InitPostEntity()
 		return
 	end
 	
-	// Remove old spawn points
-	for _, ips in pairs(ents.FindByClass("info_player_start")) do
-		if !ips:HasSpawnFlags(1) || INFO_PLAYER_SPAWN then
-			ips:Remove()
+	-- Half-Life 2: DM coop maps don't spawn on these.
+	if !HL2MP_IS_COOP_MAP then
+		// Remove old spawn points
+		for _, ips in pairs(ents.FindByClass("info_player_start")) do
+			if !ips:HasSpawnFlags(1) || INFO_PLAYER_SPAWN then
+				ips:Remove()
+			end
 		end
-	end
 	
-	// Setup INFO_PLAYER_SPAWN
-	if INFO_PLAYER_SPAWN then
-		GAMEMODE:CreateSpawnPoint(INFO_PLAYER_SPAWN[1], INFO_PLAYER_SPAWN[2])
+		// Setup INFO_PLAYER_SPAWN
+		if INFO_PLAYER_SPAWN then
+			GAMEMODE:CreateSpawnPoint(INFO_PLAYER_SPAWN[1], INFO_PLAYER_SPAWN[2])
+		end
 	end
 	
 	// Setup TRIGGER_CHECKPOINT
@@ -827,17 +836,20 @@ function GM:InitPostEntity()
 	end
 	table.insert(checkpointPositions, tdmlPos)
 	
-	// Old usermessages
-	if GetConVarNumber("hl2c_use_old_umsg") >= 1 then
-		umsg.Start("SetCheckpointPosition", RecipientFilter():AddAllPlayers())
-		umsg.Vector(checkpointPositions[#checkpointPositions])
-		umsg.End()
-	elseif GetConVarNumber("hl2c_use_old_umsg") == 0 then
-		// Use the new net library
-		for _, pl in pairs(player.GetAll()) do
-			net.Start("SetCheckpointPosition")
-				net.WriteVector(checkpointPositions[#checkpointPositions])
-			net.Send(pl)	
+	-- Half-Life 2: DM coop maps don't need to show the checkpoint positions, we're keeping it clean.
+	if !HL2MP_IS_COOP_MAP then
+		// Old usermessages
+		if GetConVarNumber("hl2c_use_old_umsg") >= 1 then
+			umsg.Start("SetCheckpointPosition", RecipientFilter():AddAllPlayers())
+			umsg.Vector(checkpointPositions[#checkpointPositions])
+			umsg.End()
+		elseif GetConVarNumber("hl2c_use_old_umsg") == 0 then
+			// Use the new net library
+			for _, pl in pairs(player.GetAll()) do
+				net.Start("SetCheckpointPosition")
+					net.WriteVector(checkpointPositions[#checkpointPositions])
+				net.Send(pl)
+			end
 		end
 	end
 	
@@ -921,6 +933,13 @@ function GM:InitPostEntity()
 		local triggerMultiples = ents.FindByName("fall_trigger")
 		for _, falltrigger in pairs(triggerMultiples) do
 			falltrigger:Remove()
+		end
+	end
+	
+	if GetConVarNumber("hl2c_additions") >= 1 && !game.SinglePlayer() then
+		local hl2_suitcharger = ents.FindByClass("item_suitcharger")
+		for _, scharger in pairs(hl2_suitcharger) do
+			scharger:Fire("addoutput", "OnEmpty !self,Recharge,,0.5,-1")
 		end
 	end
 	
@@ -1111,7 +1130,7 @@ function GM:PlayerCanPickupItem(pl, item)
 		return false
 	end
 	
-	if GetConVarNumber("hl2c_ammo_limits") >= 1 then
+	if GetConVarNumber("hl2c_ammo_limits") >= 1 || HL2MP_IS_COOP_MAP then
 	
 		if item:GetClass() == "item_ammo_pistol" || item:GetClass() == "item_ammo_pistol_large" then
 			if pl:GetAmmoCount("pistol") >= GetConVarNumber("hl2c_ammo_pistol_max") then
@@ -1192,6 +1211,16 @@ function GM:PlayerInitialSpawn(pl)
 	pl.startTime = CurTime()
 	pl:SetTeam(TEAM_ALIVE)
 	
+	// Half-Life 2: DM mode is enabled
+	if HL2MP_IS_COOP_MAP then
+		pl:ChatPrint("You're playing Half-Life 2 Campaign in a Half-Life 2: Deathmatch map.")
+	end
+	
+	// MaxPlayers is over 10, warn the player.
+	if game.MaxPlayers() > 10 then
+		pl:ChatPrint("This server allows more than 10 players! Be warned that the server may lag harshly under these conditions.")
+	end
+	
 	// Send this to clients that Sandbox mode is on
 	if GetConVarNumber("hl2c_spawnmenu") >= 1 then
 		net.Start("SpawnMenuEnabled")
@@ -1207,7 +1236,7 @@ function GM:PlayerInitialSpawn(pl)
 	
 	// If vehicles are allowed, print a message.
 	if ALLOWED_VEHICLE then
-		pl:ChatPrint("Press F3 to spawn a vehicle.")
+		pl:ChatPrint("Press ShowSpare1(F3) to spawn a vehicle.")
 	end
 	
 	// CUSTOM COLLISION CHECK FOR PLAYERS SO YOU CANNOT COLLIDE WITH EACH OTHER OR FRIENDLY NPCS
@@ -1229,21 +1258,23 @@ function GM:PlayerInitialSpawn(pl)
 		end
 	end
 	
-	if GetConVarNumber("hl2c_admin_material") >= 1 then
-		if pl:IsAdmin() then
-			pl:SetMaterial("debug/env_cubemap_model") -- Admins will be given this material.
+	if GetConVarNumber("hl2c_betatester_trails") >= 1 then
+		if !game.SinglePlayer() && table.HasValue(BETA_TESTERS, pl:SteamID()) then
+			util.SpriteTrail(pl, 0, Color(255, 255, 255, 255), true, 10, 0, 1, 1 / (5 + 3) * 0.5, "trails/physbeam.vmt")
 		end
 	end
 	
-	// Set current checkpoint
-	if GetConVarNumber("hl2c_use_old_umsg") >= 1 then
-		umsg.Start("PlayerInitialSpawn", pl)
-		umsg.Vector(checkpointPositions[1])
-		umsg.End()
-	elseif GetConVarNumber("hl2c_use_old_umsg") == 0 then
-		net.Start("PlayerInitialSpawn")
-			net.WriteVector(checkpointPositions[1])
-		net.Send(pl)
+	if !HL2MP_IS_COOP_MAP then
+		// Set current checkpoint
+		if GetConVarNumber("hl2c_use_old_umsg") >= 1 then
+			umsg.Start("PlayerInitialSpawn", pl)
+			umsg.Vector(checkpointPositions[1])
+			umsg.End()
+		elseif GetConVarNumber("hl2c_use_old_umsg") == 0 then
+			net.Start("PlayerInitialSpawn")
+				net.WriteVector(checkpointPositions[1])
+			net.Send(pl)
+		end
 	end
 end 
 
@@ -1271,6 +1302,16 @@ function GM:PlayerLoadout(pl)
 		end
 	end
 	
+	// HL2MP Coop Map in use we should give the Rebel kit.
+	if HL2MP_IS_COOP_MAP then
+		pl:Give("weapon_crowbar")
+		pl:Give("weapon_physcannon")
+		pl:Give("weapon_pistol")
+		pl:Give("weapon_smg1")
+		pl:Give("weapon_frag")
+		pl:Give("weapon_frag")
+	end
+	
 	// Lastly give physgun to admins
 	if GetConVarNumber("hl2c_admin_physgun") >= 1 && pl:IsAdmin() then
 		pl:Give("weapon_physgun")
@@ -1290,8 +1331,14 @@ end
 
 // Select the player spawn
 function GM:PlayerSelectSpawn(pl)
-	local spawnPoints = ents.FindByClass("info_player_start")
-	return spawnPoints[#spawnPoints]
+	if !HL2MP_IS_COOP_MAP then
+		local spawnPoints = ents.FindByClass("info_player_start")
+		return spawnPoints[#spawnPoints]
+	else
+		local spawnPointsRebel = ents.FindByClass("info_player_rebel")
+		local spawnPointsRebel_Random = math.random(#spawnPointsRebel)
+		return spawnPointsRebel[spawnPointsRebel_Random]
+	end
 end 
 
 
@@ -1455,7 +1502,7 @@ function GM:PlayerSpawn(pl)
 	if !PLAYER_IS_CITIZEN then
 		if !string.find(game.GetMap(), "d1_trainstation_") then
 			if GetConVarString("hl2c_custom_weapon_1") != "" then
-					pl:Give(GetConVarString("hl2c_custom_weapon_1"))
+				pl:Give(GetConVarString("hl2c_custom_weapon_1"))
 			end
 				
 			if GetConVarString("hl2c_custom_weapon_2") != "" then
@@ -1464,6 +1511,14 @@ function GM:PlayerSpawn(pl)
 				
 			if GetConVarString("hl2c_custom_weapon_3") != "" then
 				pl:Give(GetConVarString("hl2c_custom_weapon_3"))
+			end
+			
+			if GetConVarString("hl2c_custom_weapon_4") != "" then
+				pl:Give(GetConVarString("hl2c_custom_weapon_4"))
+			end
+			
+			if GetConVarString("hl2c_custom_weapon_5") != "" then
+				pl:Give(GetConVarString("hl2c_custom_weapon_5"))
 			end
 		end
 	end
@@ -1763,13 +1818,17 @@ function GM:Think()
 				else
 					pl:SetPlayerColor( Vector( 1,0.5,0 ) )
 				end
-				pl:EquipSuit()
+				if !pl:IsSuitEquipped() then
+					pl:EquipSuit()
+				end
 				if HL1_CAMPAIGN == true then
 					GAMEMODE:SetPlayerSpeed(pl, 320, 320)
 				end
 			elseif pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN || pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN != false then
 				pl:SetPlayerColor( Vector( 0,0.5,1 ) )
-				pl:RemoveSuit()
+				if pl:IsSuitEquipped() then
+					pl:RemoveSuit()
+				end
 				if GetConVarNumber("hl2c_classic") == 0 then
 					if HL1_CAMPAIGN == false then
 						GAMEMODE:SetPlayerSpeed(pl, 140, 140)
@@ -1830,7 +1889,7 @@ function GM:Think()
 					end
 				elseif pl:WaterLevel() == 3 && pl.energy > 0 then
 					pl.energy = pl.energy - .5
-				elseif pl:FlashlightIsOn() && pl.energy > 0 then
+				elseif !HL2MP_IS_COOP_MAP && pl:FlashlightIsOn() && pl.energy > 0 then
 					pl.energy = pl.energy - .2
 				elseif pl.energy < 100 then
 					pl.energy = pl.energy + .5
@@ -1896,16 +1955,18 @@ function GM:Think()
 		end
 		
 		if GetConVarNumber("hl2c_classic") == 0 then
-			// Flashlight should run out eventually
-			if pl.energy < 2 && !pl.flashlightDisabled then
-				pl.flashlightDisabled = true
-			elseif pl.energy >= 15 && pl.flashlightDisabled then
-				pl.flashlightDisabled = false
-			end
-			
-			// Turn the flashlight off
-			if pl.flashlightDisabled && pl:FlashlightIsOn() then
-				pl:Flashlight(false)
+			if !HL2MP_IS_COOP_MAP then
+				// Flashlight should run out eventually
+				if pl.energy < 2 && !pl.flashlightDisabled then
+					pl.flashlightDisabled = true
+				elseif pl.energy >= 15 && pl.flashlightDisabled then
+					pl.flashlightDisabled = false
+				end
+				
+				// Turn the flashlight off
+				if pl.flashlightDisabled && pl:FlashlightIsOn() then
+					pl:Flashlight(false)
+				end
 			end
 		end
 		

@@ -359,11 +359,11 @@ function GM:Initialize()
 	language.Add("npc_grenade_frag", "Grenade")
 	
 	// People without HL2 will be disconnected
-	if string.find(game.GetMap(), "d1_") || string.find(game.GetMap(), "d2_") || string.find(game.GetMap(), "d3_") then
-		if !IsMounted("hl2") then
-			RunConsoleCommand("disconnect")
-		end
-	end
+	-- if string.find(game.GetMap(), "d1_") || string.find(game.GetMap(), "d2_") || string.find(game.GetMap(), "d3_") then
+		-- if !IsMounted("hl2") then
+			-- RunConsoleCommand("disconnect")
+		-- end
+	-- end
 end
 
 function GM:PreDrawHalos()
