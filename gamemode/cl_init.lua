@@ -136,13 +136,17 @@ function GM:HUDPaint()
 			-- surface.DrawRect(centerX - 1, centerY - 9, 1, 1)
 			
 			if !LocalPlayer():KeyDown(IN_ZOOM) then
-				draw.SimpleText("(", "crosshair44", centerX - 15, centerY, Color(GetConVarNumber("hl2c_hud02_r"), GetConVarNumber("hl2c_hud02_g"), GetConVarNumber("hl2c_hud02_b"), 150), 2, 1)
-				draw.SimpleText(")", "crosshair44", centerX + 15, centerY, Color(GetConVarNumber("hl2c_hud02_r"), GetConVarNumber("hl2c_hud02_g"), GetConVarNumber("hl2c_hud02_b"), 150), 0, 1)
+				if GetConVarNumber("cl_drawhud") != 0 then
+					draw.SimpleText("(", "crosshair44", centerX - 15, centerY, Color(GetConVarNumber("hl2c_hud02_r"), GetConVarNumber("hl2c_hud02_g"), GetConVarNumber("hl2c_hud02_b"), 150), 2, 1)
+					draw.SimpleText(")", "crosshair44", centerX + 15, centerY, Color(GetConVarNumber("hl2c_hud02_r"), GetConVarNumber("hl2c_hud02_g"), GetConVarNumber("hl2c_hud02_b"), 150), 0, 1)
+				end
 			end
 		end
 		
 		// Check if the HEV suit is on
 		if LocalPlayer():IsSuitEquipped() then
+		
+			if GetConVarNumber("cl_drawhud") != 0 then
 		
 			// Custom Health
 			if GetConVarNumber("hl2c_custom_hud") >= 1 && !classicMode then
@@ -174,6 +178,8 @@ function GM:HUDPaint()
 				surface.SetTextColor(GetConVarNumber("hl2c_hud01_r"), GetConVarNumber("hl2c_hud01_g"), GetConVarNumber("hl2c_hud01_b"), 150)
 				surface.SetTextPos(w - w * 0.89, h - h * 0.080) 
 				surface.DrawText("*")
+			end
+			
 			end
 		
 		end

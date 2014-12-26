@@ -45,7 +45,7 @@ end
 
 // Debug: Show who is an admin
 if !ConVarExists("hl2c_betatester_trails") then
-	CreateConVar("hl2c_betatester_trails", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Toggle whether admins should have a cubemap material.")
+	CreateConVar("hl2c_betatester_trails", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Toggle whether beta testers have trails on their feet.")
 end
 
 // Toggle whether bots should go on their own team(Spectator)
@@ -70,7 +70,7 @@ end
 
 // ONLY WORKS IN MULTIPLAYER. Make the gamemode add in additions to the gameplay?
 if !ConVarExists("hl2c_additions") then
-	CreateConVar("hl2c_additions", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Only usable in Multiplayer. Add in additions to the gameplay?")
+	CreateConVar("hl2c_additions", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Only usable in Multiplayer. Add in additions to the gameplay?")
 end
 
 // ONLY WORKS IN MULTIPLAYER. Should we use the old NextMap timer?
@@ -124,6 +124,11 @@ end
 // Usermessages vs. Net Library
 if !ConVarExists("hl2c_use_old_umsg") then
 	CreateConVar("hl2c_use_old_umsg", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Use UserMessages instead of NET LIBRARY.")
+end
+
+// Small useless cvar to show if it's a holiday
+if !ConVarExists("hl2c_holiday") then
+	CreateConVar("hl2c_holiday", "0", { FCVAR_GAMEDLL }, "Show if holiday features will be used.")
 end
 
 // Precache all the player models ahead of time
@@ -1777,6 +1782,17 @@ function GM:Think()
 		GAMEMODE:RestartMap()
 	end
 	
+	// Holiday is Christmas!
+	if (os.date("%m", os.time()) == "12" && os.date("%d", os.time()) >= "20") then
+		if GetConVarNumber("hl2c_holiday") != "1" then
+			game.ConsoleCommand("hl2c_holiday 1\n")
+		end
+	else
+		if GetConVarNumber("hl2c_holiday") != "0" then
+			game.ConsoleCommand("hl2c_holiday 0\n")
+		end
+	end
+	
 	// Classic mode never had these commands.
 	if GetConVarNumber("hl2c_classic") >= 1 then
 		game.ConsoleCommand("hl2c_additions 0\n")
@@ -1807,28 +1823,37 @@ function GM:Think()
 		// Is player a citizen?
 		for _, pl in pairs(player.GetAll()) do
 			if pl:Team() == TEAM_ALIVE && !PLAYER_IS_CITIZEN || pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN != true then
-				local plSteamID = pl:SteamID()
 			
 				if pl.abilityInvinc && !game.SinglePlayer() then
-					pl:SetPlayerColor( Vector( 0,0,0 ) )
-				elseif table.HasValue(BETA_TESTERS, plSteamID) && !game.SinglePlayer() then
-					pl:SetPlayerColor( Vector( 0.3,0,1 ) )
-				elseif pl:IsAdmin() && !table.HasValue(BETA_TESTERS, plSteamID) && !game.SinglePlayer() then
-					pl:SetPlayerColor( Vector( 0,0.3,0 ) )
+					pl:SetPlayerColor(Vector(0, 0, 0))
+				elseif table.HasValue(BETA_TESTERS, pl:SteamID()) && !game.SinglePlayer() then
+					pl:SetPlayerColor(Vector(0.3, 0, 1))
+				elseif pl:IsAdmin() && !table.HasValue(BETA_TESTERS, pl:SteamID()) && !game.SinglePlayer() then
+					pl:SetPlayerColor(Vector(0, 0.3, 0))
 				else
-					pl:SetPlayerColor( Vector( 1,0.5,0 ) )
+					if (os.date("%m", os.time()) == "12" && os.date("%d", os.time()) >= "20") then
+						pl:SetPlayerColor(Vector(1, 0, 0))
+					else
+						pl:SetPlayerColor(Vector(1, 0.5, 0))
+					end
 				end
+				
 				if !pl:IsSuitEquipped() then
 					pl:EquipSuit()
 				end
+				
 				if HL1_CAMPAIGN == true then
 					GAMEMODE:SetPlayerSpeed(pl, 320, 320)
 				end
+				
 			elseif pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN || pl:Team() == TEAM_ALIVE && PLAYER_IS_CITIZEN != false then
-				pl:SetPlayerColor( Vector( 0,0.5,1 ) )
+			
+				pl:SetPlayerColor(Vector(0, 0.5, 1))
+				
 				if pl:IsSuitEquipped() then
 					pl:RemoveSuit()
 				end
+				
 				if GetConVarNumber("hl2c_classic") == 0 then
 					if HL1_CAMPAIGN == false then
 						GAMEMODE:SetPlayerSpeed(pl, 140, 140)
@@ -1836,6 +1861,7 @@ function GM:Think()
 						GAMEMODE:SetPlayerSpeed(pl, 320, 320)
 					end
 				end
+				
 			end
 		end
 	elseif GetConVarNumber("hl2c_classic") >= 1 then

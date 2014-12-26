@@ -68,4 +68,72 @@ hook.Add("InitPostEntity", "hl2cInitPostEntity", function()
 		gman_npc:Activate()
 	
 	end
+	
+	-- Festive!
+	if (os.date("%m", os.time()) == "12" && os.date("%d", os.time()) >= "20") then
+	
+		if GetConVarNumber("hl2c_additions") >= 1 then
+	
+		local text1 = ents.Create("game_text")
+		text1:SetPos(Vector(1163, -32, -135))
+		text1:SetKeyValue("spawnflags", "1")
+		text1:SetKeyValue("targetname", "hl2c_christmas_text")
+		text1:SetKeyValue("color", "0 255 0")
+		text1:SetKeyValue("color2", "0 255 0")
+		text1:SetKeyValue("fadein", "0.5")
+		text1:SetKeyValue("holdtime", "6.2")
+		text1:SetKeyValue("message", "Merry Christmas!")
+		text1:SetKeyValue("y", "0.2")
+		text1:SetKeyValue("x", "-1")
+		text1:Spawn()
+		text1:Activate()
+	
+		local christmas_ss = ents.Create("scripted_sequence")
+		christmas_ss:SetPos(Vector(-1944, -1670, 69))
+		christmas_ss:SetKeyValue("m_fMoveTo", "0")
+		christmas_ss:SetKeyValue("m_iszEntity", "hl2c_christmas_citizen1")
+		christmas_ss:SetKeyValue("m_iszPostIdle", "Wave_SMG1")
+		christmas_ss:SetKeyValue("m_iszPlay", "Wave_SMG1")
+		christmas_ss:SetKeyValue("spawnflags", "480")
+		christmas_ss:SetKeyValue("targetname", "hl2c_christmas_sequence1")
+		christmas_ss:Spawn()
+		christmas_ss:Activate()
+		christmas_ss:Fire("BeginSequence", "", "15.0")
+		
+		local christmas_ss = ents.Create("scripted_sequence")
+		christmas_ss:SetPos(Vector(-1943, -1670, 69))
+		christmas_ss:SetKeyValue("m_fMoveTo", "0")
+		christmas_ss:SetKeyValue("m_iszEntity", "hl2c_christmas_citizen2")
+		christmas_ss:SetKeyValue("m_iszPostIdle", "Wave_SMG1")
+		christmas_ss:SetKeyValue("m_iszPlay", "Wave_SMG1")
+		christmas_ss:SetKeyValue("spawnflags", "480")
+		christmas_ss:SetKeyValue("targetname", "hl2c_christmas_sequence2")
+		christmas_ss:Spawn()
+		christmas_ss:Activate()
+		christmas_ss:Fire("BeginSequence", "", "15.0")
+	
+		local christmas_citizen1 = ents.Create("npc_citizen")
+		christmas_citizen1:SetPos(Vector(-2008, -1707, 69))
+		christmas_citizen1:SetKeyValue("targetname", "hl2c_christmas_citizen1")
+		christmas_citizen1:SetKeyValue("angles", "0 230 0")
+		christmas_citizen1:SetKeyValue("model", "models/humans/group01/male_06.mdl")
+		christmas_citizen1:SetKeyValue("spawnflags", "1073804")
+		christmas_citizen1:Spawn()
+		christmas_citizen1:Activate()
+		christmas_citizen1:Fire("addoutput", "OnHearPlayer hl2c_christmas_text,Display,,0.0,-1")
+		
+		local christmas_citizen2 = ents.Create("npc_citizen")
+		christmas_citizen2:SetPos(Vector(-2000, -1888, 69))
+		christmas_citizen2:SetKeyValue("targetname", "hl2c_christmas_citizen2")
+		christmas_citizen2:SetKeyValue("angles", "0 140 0")
+		christmas_citizen2:SetKeyValue("model", "models/humans/group01/female_04.mdl")
+		christmas_citizen2:SetKeyValue("spawnflags", "1073804")
+		christmas_citizen2:Spawn()
+		christmas_citizen2:Activate()
+		christmas_citizen2:Fire("addoutput", "OnHearPlayer hl2c_christmas_text,Display,,0.0,-1")
+		
+		end
+		
+	end
+	
 end)

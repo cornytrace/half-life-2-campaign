@@ -93,7 +93,7 @@
 			"text"		"Gameplay Additions(W.I.P)"
 			"help"		"In Multiplayer, should we add anything new to the gameplay?"
 			"type"		"CheckBox"
-			"default"	"0"
+			"default"	"1"
 		}
 		
 		11

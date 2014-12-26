@@ -106,6 +106,9 @@ end
 // Updates the scoreboard
 function PANEL:UpdatePlayerRow()
 	self.nameLabel:SetText(self.pl:Name())
+	if !game.SinglePlayer() && table.HasValue(BETA_TESTERS, self.pl:SteamID()) then
+		self.nameLabel:SetColor(Color(200, 0, 255))
+	end
 	
 	if self.pl:Team() != TEAM_ALIVE then
 		self.statusLabel:SetText(team.GetName(self.pl:Team()))

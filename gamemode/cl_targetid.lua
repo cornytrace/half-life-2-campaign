@@ -43,7 +43,11 @@ function GM:HUDDrawTargetID()
 	x = x - w / 2
 	y = y + 30
 
-	draw.SimpleText( text, font, x, y, self:GetTeamColor( trace.Entity ) )
+	if trace.Entity:IsPlayer() && table.HasValue(BETA_TESTERS, trace.Entity:SteamID()) then
+		draw.SimpleText( text, font, x, y, Color( 200, 0, 255 ) )
+	else
+		draw.SimpleText( text, font, x, y, self:GetTeamColor( trace.Entity ) )
+	end
 	
 	else -- If hl2c_custom_targetid is 0, use the default targetid system.
 	
