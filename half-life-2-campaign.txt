@@ -22,6 +22,7 @@
 			"help"		"When this is enabled, admins of the server get Physics Guns."
 			"type"		"CheckBox"
 			"default"	"0"
+			"singleplayer" "1"
 		}
 		
 		3
@@ -31,6 +32,7 @@
 			"help"		"When this is enabled, admins of the server are allowed to No-Clip."
 			"type"		"CheckBox"
 			"default"	"0"
+			"singleplayer" "1"
 		}
 		
 		4
@@ -121,6 +123,7 @@
 			"help"		"The shop system. Disabled by default."
 			"type"		"CheckBox"
 			"default"	"0"
+			"singleplayer" "1"
 		}
 		
 		14
@@ -131,5 +134,14 @@
 			"type"		"CheckBox"
 			"default"	"1"
 		}
+		
+		15
+		{
+			"name"		"hl2c_spawnmenu"
+			"text"		"Is Spawnmenu enabled?"
+			"help"		"Enabled the spawnmenu, only admins can spawn anything other than sweps"
+			"type"		"CheckBox"
+			"default"	"0"
+			"singleplayer" "1"
 	}
 }
