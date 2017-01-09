@@ -3,6 +3,7 @@ include("sh_init.lua")
 include("cl_spawnmenu.lua")
 include("cl_scoreboard.lua")
 include("cl_targetid.lua")
+include("cl_hints.lua")
 
 // Client only constants
 DROWNING_SOUNDS = {
