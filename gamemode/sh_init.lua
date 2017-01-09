@@ -9,6 +9,8 @@ GM.Author = "AMT"
 GM.Email = "theis.andrew@gmail.com"
 GM.Website = "http://www.andrewtheis.net/"
 
+DeriveGamemode("sandbox")
+
 if !ConVarExists("hl2c_passenger_seats") then
 	CreateConVar("hl2c_passenger_seats", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_REPLICATED, FCVAR_ARCHIVE }, "Make HL2C spawn in unstable passenger seats in Vehicles.")
 end

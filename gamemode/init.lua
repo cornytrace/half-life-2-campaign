@@ -10,6 +10,7 @@ AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("cl_scoreboard.lua")
 AddCSLuaFile("cl_scoreboard_playerlist.lua")
 AddCSLuaFile("cl_scoreboard_playerrow.lua")
+AddCSLuaFile( "cl_spawnmenu.lua" )
 AddCSLuaFile("cl_targetid.lua")
 AddCSLuaFile("sh_config.lua")
 AddCSLuaFile("sh_init.lua")
@@ -19,6 +20,7 @@ AddCSLuaFile("player_class/player_coop.lua")
 
 // Include the required lua files
 include("sh_init.lua")
+include("spawnmenu/init.lua")
 
 // Include the configuration for this map
 if file.Exists("hl2c_custom/maps/"..game.GetMap()..".lua", "LUA") then

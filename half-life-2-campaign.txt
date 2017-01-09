@@ -1,6 +1,6 @@
 "half-life-2-campaign"
 {
-	"base"		"base"
+	"base"		"sandbox"
 	"title"		"Half-Life 2 Campaign"
 	"menusystem"	"1"
 

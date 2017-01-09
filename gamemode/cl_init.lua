@@ -1,13 +1,8 @@
 // Include the required lua files
 include("sh_init.lua")
+include("cl_spawnmenu.lua")
 include("cl_scoreboard.lua")
 include("cl_targetid.lua")
-
-// Include the cl_spawnmenu file from Sandbox.
-net.Receive("SpawnMenuEnabled", function(len)
-	sandboxMode = true
-end)
-
 
 // Client only constants
 DROWNING_SOUNDS = {
@@ -248,7 +243,6 @@ function GM:Initialize()
 	showNav = true
 	scoreboard = nil
 	delayVoiceLine = false
-	sandboxMode = false
 	
 	// Create a Client ConVar to control stuff
 	CreateClientConVar("hl2c_player_halo", "0", true, false)
@@ -614,7 +608,7 @@ end)
 
 // New binds
 function GM:PlayerBindPress(pl, bind, pressed)
-	if !sandboxMode then
+	if !GetConVar("hl2c_spawnmenu"):GetBool() then
 	
 		-- Random voice lines (For fun)
 		if (bind == "+menu_context") && !game.SinglePlayer() then
