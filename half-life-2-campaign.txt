@@ -144,4 +144,14 @@
 			"default"	"0"
 			"singleplayer" "1"
 		}
+		
+		16
+		{
+			"name"		"hl2c_singleplayer_admin"
+			"text"		"Singleplayer admin?"
+			"help"		"When playing singleplayer, is the player seen as admin?"
+			"type"		"CheckBox"
+			"default"	"1"
+			"singleplayer" "1"
+		}
 }

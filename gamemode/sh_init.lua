@@ -16,6 +16,16 @@ if !ConVarExists("hl2c_passenger_seats") then
 	CreateConVar("hl2c_passenger_seats", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_REPLICATED, FCVAR_ARCHIVE }, "Make HL2C spawn in unstable passenger seats in Vehicles.")
 end
 
+if !ConVarExists("hl2c_singleplayer_admin") and game.SinglePlayer() then
+	CreateConVar("hl2c_singleplayer_admin", "1", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_REPLICATED, FCVAR_ARCHIVE }, "When playing singleplayer, is the player seen as admin?")
+	
+	local meta = FindMetaTable("Player")
+	IsAdminCopy = meta.IsAdmin
+	function meta:IsAdmin(self) 
+		return GetConVar("hl2c_singleplayer_admin"):GetBool()
+	end
+end
+
 concommand.Add("hl2c_respawn_dead_players", function(pl) if pl:IsAdmin() && !game.SinglePlayer() then GAMEMODE:HL2CForceRespawn() elseif !pl:IsAdmin() then pl:PrintMessage(HUD_PRINTTALK, "Only admins can use this, sorry.") elseif game.SinglePlayer() then pl:PrintMessage(HUD_PRINTTALK, "You cannot use this command in Singleplayer.") end end)
 
 // Constants
