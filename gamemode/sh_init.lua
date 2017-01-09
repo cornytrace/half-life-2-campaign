@@ -1,6 +1,7 @@
 // Include the required lua files
 include("sh_config.lua")
 include("sh_player.lua")
+include("player.lua")
 include("player_class/player_coop.lua")
 
 // General gamemode information
