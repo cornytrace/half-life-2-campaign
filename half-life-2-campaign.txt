@@ -154,4 +154,5 @@
 			"default"	"1"
 			"singleplayer" "1"
 		}
+	}
 }
